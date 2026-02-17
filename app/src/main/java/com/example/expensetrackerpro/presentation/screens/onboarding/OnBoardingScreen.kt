@@ -74,7 +74,7 @@ fun OnBoardingScreen(navController: NavController) {
     )
 
     IntroScreen(list = list) {
-        navController.navigate(Screens.HomeScreen.route) {
+        navController.navigate(Screens.SignUpScreen.route) {
             popUpTo(Screens.OnBoardingScreen.route) { inclusive = true }
         }
     }
