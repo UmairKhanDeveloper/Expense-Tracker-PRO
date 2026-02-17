@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.presentation.navigation.Screens
 
 @Composable
 fun SignUpScreen(navController: NavController) {
@@ -104,7 +106,7 @@ fun SignUpScreen(navController: NavController) {
             icon = R.drawable.lock,
         )
 
-        LoginButton(onClick = {})
+        LoginButton(onClick = {navController.navigate(Screens.LoginScreen.route)})
 
         Text(
             text = "FORGOT PASSWORD",
@@ -124,13 +126,13 @@ fun SignUpScreen(navController: NavController) {
 
         SocialButton(
             text = "CONTINUE WITH GOOGLE",
-            icon = R.drawable.logo
+            icon = R.drawable.flat_color_icons_google
         )
 
 
         SocialButton(
             text = "CONTINUE WITH APPLE",
-            icon = R.drawable.logo
+            icon = R.drawable.ant_design_apple_filled
         )
 
 
@@ -163,6 +165,8 @@ fun CustomAuthTextFieldUserName(
     icon: Int,
 ) {
 
+    var isFocused by remember { mutableStateOf(false) }
+
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -174,15 +178,25 @@ fun CustomAuthTextFieldUserName(
         modifier = Modifier
             .padding(bottom = 20.dp)
             .width(280.dp)
-            .height(48.dp),
+            .height(48.dp)
+            .onFocusChanged {
+                isFocused = it.isFocused
+            },
+
         decorationBox = { innerTextField ->
+
+            val borderColor =
+                if (isFocused)
+                    Color(0xFF37ABFF)
+                else
+                    Color(0XFF9BA1A8)
 
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .border(1.dp, color = Color(0XFF9BA1A8), RoundedCornerShape(10.dp))
+                    .border(1.dp, borderColor, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
-                    .background(colorResource(id = R.color.light_gray))
+                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))
                     .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -195,7 +209,8 @@ fun CustomAuthTextFieldUserName(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Box {
+                Box(Modifier.weight(1f)) {
+
                     if (value.isEmpty()) {
                         Text(
                             text = hint,
@@ -219,6 +234,8 @@ fun CustomAuthTextFieldEmail(
     icon: ImageVector,
 ) {
 
+    var isFocused by remember { mutableStateOf(false) }
+
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -230,16 +247,25 @@ fun CustomAuthTextFieldEmail(
         modifier = Modifier
             .padding(bottom = 20.dp)
             .width(280.dp)
-            .height(48.dp),
+            .height(48.dp)
+            .onFocusChanged {
+                isFocused = it.isFocused
+            },
+
         decorationBox = { innerTextField ->
+
+            val borderColor =
+                if (isFocused)
+                    Color(0xFF37ABFF)
+                else
+                    Color(0XFF9BA1A8)
 
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .border(1.dp, color = Color(0XFF9BA1A8), RoundedCornerShape(10.dp))
+                    .border(1.dp, borderColor, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
-                    .background(colorResource(id = R.color.light_gray))
-                    .padding(horizontal = 12.dp),
+                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -251,7 +277,8 @@ fun CustomAuthTextFieldEmail(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Box {
+                Box(Modifier.weight(1f)) {
+
                     if (value.isEmpty()) {
                         Text(
                             text = hint,
@@ -267,6 +294,7 @@ fun CustomAuthTextFieldEmail(
     )
 }
 
+
 @Composable
 fun CustomAuthTextFieldPassword(
     value: String,
@@ -276,6 +304,7 @@ fun CustomAuthTextFieldPassword(
 ) {
 
     var passwordVisible by remember { mutableStateOf(false) }
+    var isFocused by remember { mutableStateOf(false) }
 
     BasicTextField(
         value = value,
@@ -296,16 +325,25 @@ fun CustomAuthTextFieldPassword(
         modifier = Modifier
             .padding(bottom = 24.dp)
             .width(280.dp)
-            .height(48.dp),
+            .height(48.dp)
+            .onFocusChanged {
+                isFocused = it.isFocused
+            },
 
         decorationBox = { innerTextField ->
+
+            val borderColor =
+                if (isFocused)
+                    Color(0xFF37ABFF)
+                else
+                    Color(0XFF9BA1A8)
+
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .border(1.dp, color = Color(0XFF9BA1A8), RoundedCornerShape(10.dp))
+                    .border(1.dp, borderColor, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
-                    .background(colorResource(id = R.color.light_gray))
-                    .padding(horizontal = 12.dp),
+                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -317,9 +355,7 @@ fun CustomAuthTextFieldPassword(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
+                Box(Modifier.weight(1f)) {
 
                     if (value.isEmpty()) {
                         Text(
@@ -345,11 +381,11 @@ fun CustomAuthTextFieldPassword(
                             passwordVisible = !passwordVisible
                         }
                 )
-
             }
         }
     )
 }
+
 
 
 @Composable
@@ -381,7 +417,7 @@ fun LoginButton(
     ) {
 
         Text(
-            text = "LOGIN",
+            text = "SIGN UP",
             color = Color.White,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
