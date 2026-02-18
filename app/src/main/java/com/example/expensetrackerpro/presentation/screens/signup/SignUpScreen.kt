@@ -1,5 +1,10 @@
 package com.example.expensetrackerpro.presentation.screens.signup
 
+import android.app.Activity
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,9 +29,11 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +43,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -47,16 +55,55 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.google_firebase.GoogleAuthUiClient
+import com.example.expensetrackerpro.google_firebase.SignInResult
+import com.example.expensetrackerpro.google_firebase.SignInViewModel
 import com.example.expensetrackerpro.presentation.navigation.Screens
+import kotlinx.coroutines.launch
+
+
+
 
 @Composable
 fun SignUpScreen(navController: NavController) {
-    var username by remember { mutableStateOf("") }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
+    val viewModel: SignInViewModel = viewModel()
+    val state by viewModel.state.collectAsState()
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            coroutineScope.launch {
+                val signInResult: SignInResult =
+                    googleAuthUiClient.signInWithIntent(result.data ?: return@launch)
+                viewModel.onSignInResult(signInResult)
+
+                // Show toast
+                if (signInResult.data != null) {
+                    Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
+                    navController.navigate(Screens.HomeScreen.route)
+                    viewModel.resetState()
+                } else {
+                    Toast.makeText(
+                        context,
+                        "Error: ${signInResult.errorMessage ?: "Unknown error"}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
 
     val InterFont = FontFamily(
         Font(R.font.inter18ptregular, FontWeight.Normal),
@@ -83,16 +130,10 @@ fun SignUpScreen(navController: NavController) {
             fontFamily = InterFont,
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
-            color = colorResource(id = R.color.black), modifier = Modifier.padding(bottom = 58.5.dp)
+            color = colorResource(id = R.color.black),
+            modifier = Modifier.padding(bottom = 58.5.dp)
         )
 
-
-        CustomAuthTextFieldUserName(
-            value = username,
-            onValueChange = { username = it },
-            hint = "Username",
-            icon = R.drawable.profile,
-        )
         CustomAuthTextFieldEmail(
             value = email,
             onValueChange = { email = it },
@@ -106,7 +147,7 @@ fun SignUpScreen(navController: NavController) {
             icon = R.drawable.lock,
         )
 
-        LoginButton(onClick = {navController.navigate(Screens.LoginScreen.route)})
+        LoginButton(onClick = {})
 
         Text(
             text = "FORGOT PASSWORD",
@@ -114,27 +155,33 @@ fun SignUpScreen(navController: NavController) {
             fontSize = 14.sp,
             modifier = Modifier
                 .padding(bottom = 16.dp)
-                .clickable { }
+                .clickable { navController.navigate(Screens.ForgetPasswordScreen.route) }
         )
 
         Text(
             text = "Or",
             color = Color(0xFF242D35),
-            fontSize = 14.sp,modifier = Modifier
-                .padding(bottom = 16.dp)
+            fontSize = 14.sp,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
 
         SocialButton(
             text = "CONTINUE WITH GOOGLE",
             icon = R.drawable.flat_color_icons_google
-        )
-
+        ) {
+            coroutineScope.launch {
+                val intentSender = googleAuthUiClient.signIn()
+                intentSender?.let {
+                    launcher.launch(IntentSenderRequest.Builder(it).build())
+                }
+            }
+        }
 
         SocialButton(
-            text = "CONTINUE WITH APPLE",
-            icon = R.drawable.ant_design_apple_filled
+            text = "CONTINUE WITH FACEBOOK",
+            icon = R.drawable.ant_design_apple_filled,
+            onClick = {}
         )
-
 
         Row {
             Text(
@@ -148,82 +195,10 @@ fun SignUpScreen(navController: NavController) {
                 color = Color(0xFF0E33F3),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable { }
+                modifier = Modifier.clickable { navController.navigate(Screens.RegisterScreen.route) }
             )
         }
-
-
     }
-}
-
-
-@Composable
-fun CustomAuthTextFieldUserName(
-    value: String,
-    onValueChange: (String) -> Unit,
-    hint: String,
-    icon: Int,
-) {
-
-    var isFocused by remember { mutableStateOf(false) }
-
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        singleLine = true,
-        textStyle = TextStyle(
-            fontSize = 14.sp,
-            color = Color.Black
-        ),
-        modifier = Modifier
-            .padding(bottom = 20.dp)
-            .width(280.dp)
-            .height(48.dp)
-            .onFocusChanged {
-                isFocused = it.isFocused
-            },
-
-        decorationBox = { innerTextField ->
-
-            val borderColor =
-                if (isFocused)
-                    Color(0xFF37ABFF)
-                else
-                    Color(0XFF9BA1A8)
-
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .border(1.dp, borderColor, RoundedCornerShape(10.dp))
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    painter = painterResource(id = icon),
-                    contentDescription = null,
-                    tint = Color.Gray
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Box(Modifier.weight(1f)) {
-
-                    if (value.isEmpty()) {
-                        Text(
-                            text = hint,
-                            color = Color(0XFF9BA1A8),
-                            fontSize = 14.sp
-                        )
-                    }
-
-                    innerTextField()
-                }
-            }
-        }
-    )
 }
 
 @Composable
@@ -417,7 +392,7 @@ fun LoginButton(
     ) {
 
         Text(
-            text = "SIGN UP",
+            text = "Login",
             color = Color.White,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
@@ -429,35 +404,31 @@ fun LoginButton(
 @Composable
 fun SocialButton(
     text: String,
-    icon: Int
+    icon: Int,
+    onClick: () -> Unit
 ) {
     Box(
-        modifier = Modifier.padding(bottom = 28.dp)
+        modifier = Modifier
+            .padding(bottom = 28.dp)
             .width(280.dp)
             .height(48.dp)
             .border(
-                width = 1.dp,
-                color = Color(0xFF9BA1A8),
-                shape = RoundedCornerShape(10.dp)
+                1.dp,
+                Color(0xFF9BA1A8),
+                RoundedCornerShape(10.dp)
             )
             .clip(RoundedCornerShape(10.dp))
-            .clickable { }
+            .clickable { onClick() }
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
-    )
-    {
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = icon),
                 contentDescription = null,
                 modifier = Modifier.size(20.dp)
             )
-
             Spacer(modifier = Modifier.width(16.dp))
-
             Text(
                 text = text,
                 fontSize = 14.sp,
@@ -467,3 +438,4 @@ fun SocialButton(
         }
     }
 }
+

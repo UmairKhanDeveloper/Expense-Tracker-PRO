@@ -2,4 +2,7 @@
     <string name="app_name">Expense Tracker PRO</string>
     <string name="expenseTracker">Expense Tracker</string>
     <string name="smartBudgetingTrackingMadeEasy">Smart budgeting &amp; tracking made easy</string>
+    <string name="web_client_id">764921260694-ua6jki0qc01ll3ls8h1u9fl7f1hfs7kl.apps.googleusercontent.com</string>
+
+
 </resources>

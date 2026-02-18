@@ -1,4 +1,4 @@
-package com.example.expensetrackerpro.presentation.screens.login
+package com.example.expensetrackerpro.presentation.screens.Register
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -52,7 +52,8 @@ import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.presentation.navigation.Screens
 
 @Composable
-fun LoginScreen(navController: NavController) {
+fun RegisterScreen(navController: NavController) {
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -86,7 +87,12 @@ fun LoginScreen(navController: NavController) {
         )
 
 
-
+        CustomAuthTextFieldUserName(
+            value = username,
+            onValueChange = { username = it },
+            hint = "Username",
+            icon = R.drawable.profile,
+        )
         CustomAuthTextFieldEmail(
             value = email,
             onValueChange = { email = it },
@@ -100,19 +106,81 @@ fun LoginScreen(navController: NavController) {
             icon = R.drawable.lock,
         )
 
-        Text(
-            text = "FORGOT PASSWORD",
-            color = Color(0xFF6B7580),
-            fontSize = 14.sp,
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .clickable { }
-        )
+        LoginButton(onClick = {})
 
-        LoginButton(onClick = { navController.navigate(Screens.ForgetPasswordScreen.route) })
 
 
     }
+}
+
+
+@Composable
+fun CustomAuthTextFieldUserName(
+    value: String,
+    onValueChange: (String) -> Unit,
+    hint: String,
+    icon: Int,
+) {
+
+    var isFocused by remember { mutableStateOf(false) }
+
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        singleLine = true,
+        textStyle = TextStyle(
+            fontSize = 14.sp,
+            color = Color.Black
+        ),
+        modifier = Modifier
+            .padding(bottom = 20.dp)
+            .width(280.dp)
+            .height(48.dp)
+            .onFocusChanged {
+                isFocused = it.isFocused
+            },
+
+        decorationBox = { innerTextField ->
+
+            val borderColor =
+                if (isFocused)
+                    Color(0xFF37ABFF)
+                else
+                    Color(0XFF9BA1A8)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(1.dp, borderColor, RoundedCornerShape(10.dp))
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    tint = Color.Gray
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Box(Modifier.weight(1f)) {
+
+                    if (value.isEmpty()) {
+                        Text(
+                            text = hint,
+                            color = Color(0XFF9BA1A8),
+                            fontSize = 14.sp
+                        )
+                    }
+
+                    innerTextField()
+                }
+            }
+        }
+    )
 }
 
 @Composable
@@ -166,9 +234,7 @@ fun CustomAuthTextFieldEmail(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
+                Box(Modifier.weight(1f)) {
 
                     if (value.isEmpty()) {
                         Text(
@@ -184,6 +250,7 @@ fun CustomAuthTextFieldEmail(
         }
     )
 }
+
 
 @Composable
 fun CustomAuthTextFieldPassword(
@@ -234,7 +301,6 @@ fun CustomAuthTextFieldPassword(
                     .border(1.dp, borderColor, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
                     .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))                    .padding(horizontal = 12.dp),
-
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -246,9 +312,7 @@ fun CustomAuthTextFieldPassword(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
+                Box(Modifier.weight(1f)) {
 
                     if (value.isEmpty()) {
                         Text(
@@ -310,7 +374,7 @@ fun LoginButton(
     ) {
 
         Text(
-            text = "LOGIN",
+            text = "SIGN UP",
             color = Color.White,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold

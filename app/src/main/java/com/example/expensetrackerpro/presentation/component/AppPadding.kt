@@ -6,6 +6,8 @@ import androidx.compose.ui.unit.dp
 
 data class AppPadding(
     val small: Dp = 8.dp,
+    val padding24: Dp = 24.dp,
+    val padding20: Dp = 20.dp,
 )
 
 val LocalPadding = compositionLocalOf { AppPadding() }

@@ -28,29 +28,44 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.presentation.component.LocalHeight
+import com.example.expensetrackerpro.presentation.component.LocalOffset
+import com.example.expensetrackerpro.presentation.component.LocalPadding
+import com.example.expensetrackerpro.presentation.component.LocalRadius
+import com.example.expensetrackerpro.presentation.component.LocalSpace
+import com.example.expensetrackerpro.presentation.component.LocalWidth
+import com.example.expensetrackerpro.presentation.component.localTextSize
 import com.example.expensetrackerpro.presentation.navigation.Screens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgetPasswordScreen(navController: NavController) {
 
+    val padding = LocalPadding.current
+    val height = LocalHeight.current
+    val width = LocalWidth.current
+    val space = LocalSpace.current
+    val radius = LocalRadius.current
+    val textSize = localTextSize.current
+    val offset = LocalOffset.current
+
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
     Scaffold(
-        containerColor = Color.White,
+        containerColor = colorResource(id = R.color.white),
         topBar = {
             TopAppBar(
                 title = {},
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
+                    containerColor = colorResource(id = R.color.white)
                 ),
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             painter = painterResource(id = R.drawable.button),
                             contentDescription = "",
-                            tint = Color.Black
+                            tint = colorResource(id = R.color.black)
                         )
                     }
                 }
@@ -62,7 +77,7 @@ fun ForgetPasswordScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal =24.dp ),
             horizontalAlignment = Alignment.Start
         ) {
 

@@ -1,13 +1,12 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
     namespace = "com.example.expensetrackerpro"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.expensetrackerpro"
@@ -15,7 +14,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -28,12 +26,18 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
 }
 
@@ -46,6 +50,17 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    // Firebase + Google One Tap
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.play.services.auth)
+    implementation(libs.googleid)
+
+    // Android Credentials API
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -54,9 +69,14 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
+    // Navigation + Coil + Material Icons
     val nav_version = "2.9.7"
-    implementation ("androidx.navigation:navigation-compose:$nav_version")
+    implementation("androidx.navigation:navigation-compose:$nav_version")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.compose.material:material-icons-extended")
+
+
+
+
 
 }
