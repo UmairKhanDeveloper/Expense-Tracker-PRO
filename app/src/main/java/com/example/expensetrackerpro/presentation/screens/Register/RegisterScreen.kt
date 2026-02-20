@@ -1,5 +1,6 @@
 package com.example.expensetrackerpro.presentation.screens.Register
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +38,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -49,41 +52,66 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.firebase.AuthRepositoryImpl
+import com.example.expensetrackerpro.firebase.AuthUser
+import com.example.expensetrackerpro.firebase.AuthViewModel
+import com.example.expensetrackerpro.firebase.ResultState
+import com.example.expensetrackerpro.firebase_realtimedatabase.RealTimeDbRepository
+import com.example.expensetrackerpro.firebase_realtimedatabase.RealTimeUser.RealTimeItems
+import com.example.expensetrackerpro.firebase_realtimedatabase.RealTimeViewModel
 import com.example.expensetrackerpro.presentation.navigation.Screens
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(navController: NavController) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    val InterFont = FontFamily(
+    val firebaseAuth = FirebaseAuth.getInstance()
+    val authRepo = AuthRepositoryImpl(firebaseAuth, context)
+    val authViewModel = AuthViewModel(authRepo)
+
+    val databaseReference = FirebaseDatabase.getInstance().reference.child("users")
+    val realTimeRepo = remember { RealTimeDbRepository(databaseReference, context) }
+    val realTimeViewModel = remember { RealTimeViewModel(realTimeRepo) }
+
+    val interFont = FontFamily(
         Font(R.font.inter18ptregular, FontWeight.Normal),
         Font(R.font.inter18ptbold, FontWeight.Bold)
     )
 
     Column(
         modifier = Modifier
+            .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .fillMaxSize(),
+            .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        Spacer(modifier = Modifier.height(64.dp))
 
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "App Logo",
-            modifier = Modifier
-                .padding(top = 64.dp, bottom = 6.dp)
-                .size(88.dp)
+            modifier = Modifier.size(88.dp)
         )
 
         Text(
             text = stringResource(id = R.string.expenseTracker),
-            fontFamily = InterFont,
+            fontFamily = interFont,
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
-            color = colorResource(id = R.color.black), modifier = Modifier.padding(bottom = 58.5.dp)
+            color = colorResource(id = R.color.black),
+            modifier = Modifier.padding(bottom = 20.dp)
         )
 
 
@@ -91,25 +119,119 @@ fun RegisterScreen(navController: NavController) {
             value = username,
             onValueChange = { username = it },
             hint = "Username",
-            icon = R.drawable.profile,
+            icon = R.drawable.profile
         )
+
+
         CustomAuthTextFieldEmail(
             value = email,
             onValueChange = { email = it },
             hint = "Email",
-            icon = Icons.Default.Email,
+            icon = Icons.Default.Email
         )
+
+
         CustomAuthTextFieldPassword(
             value = password,
             onValueChange = { password = it },
             hint = "Password",
-            icon = R.drawable.lock,
+            icon = R.drawable.lock
         )
 
-        LoginButton(onClick = {})
 
+        LoginButton(onClick = {
+            when {
+                username.isBlank() || email.isBlank() || password.isBlank() -> {
+                    errorMessage = "All fields are required!"
+                    return@LoginButton
+                }
 
+                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                    errorMessage = "Invalid Email Address!"
+                    return@LoginButton
+                }
 
+                password.length < 6 -> {
+                    errorMessage = "Password must be at least 6 characters!"
+                    return@LoginButton
+                }
+
+                else -> {
+                    errorMessage = null
+                    isLoading = true
+
+                    scope.launch {
+                        authViewModel.createUser(
+                            AuthUser(
+                                username = username,
+                                email = email,
+                                password = password
+                            )
+                        ).collectLatest { result ->
+                            when (result) {
+                                is ResultState.Error -> {
+                                    errorMessage = "Error creating user: ${result.error.message}"
+                                    isLoading = false
+                                }
+
+                                ResultState.Loading -> {
+                                    Log.d("Firebase", "Creating user...")
+                                }
+
+                                is ResultState.Success<*> -> {
+                                    val firebaseUser = FirebaseAuth.getInstance().currentUser
+                                    firebaseUser?.let { user ->
+                                        val userEmail = user.email ?: email
+                                        realTimeViewModel.insert(
+                                            RealTimeItems(
+                                                userFirstName = username,
+                                                email = userEmail,
+                                                password = password
+                                            )
+                                        ).collectLatest { dbResult ->
+                                            when (dbResult) {
+                                                is ResultState.Error -> {
+                                                    errorMessage =
+                                                        "Error inserting data: ${dbResult.error.message}"
+                                                    isLoading = false
+                                                }
+
+                                                is ResultState.Loading -> {
+                                                    Log.d(
+                                                        "Firebase",
+                                                        "Inserting data into Realtime Database..."
+                                                    )
+                                                }
+
+                                                is ResultState.Success<*> -> {
+                                                    Log.d("Firebase", "Data inserted successfully")
+                                                    FirebaseAuth.getInstance().signOut()
+                                                    isLoading = false
+                                                    navController.navigate(Screens.SignUpScreen.route) {
+                                                        popUpTo(Screens.HomeScreen.route) {
+                                                            inclusive = true
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        errorMessage?.let { msg ->
+            Text(
+                text = msg,
+                color = Color.Red,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(top = 12.dp)
+            )
+        }
     }
 }
 
@@ -222,7 +344,8 @@ fun CustomAuthTextFieldEmail(
                     .fillMaxSize()
                     .border(1.dp, borderColor, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))                    .padding(horizontal = 12.dp),
+                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -300,7 +423,8 @@ fun CustomAuthTextFieldPassword(
                     .fillMaxSize()
                     .border(1.dp, borderColor, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))                    .padding(horizontal = 12.dp),
+                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -342,7 +466,6 @@ fun CustomAuthTextFieldPassword(
         }
     )
 }
-
 
 
 @Composable

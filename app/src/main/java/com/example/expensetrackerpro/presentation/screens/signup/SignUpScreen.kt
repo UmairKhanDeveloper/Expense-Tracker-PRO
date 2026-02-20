@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.screens.signup
 
 import android.app.Activity
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,14 +60,20 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.expensetrackerpro.R
+import com.example.expensetrackerpro.firebase.AuthRepositoryImpl
+import com.example.expensetrackerpro.firebase.AuthUser
+import com.example.expensetrackerpro.firebase.AuthViewModel
+import com.example.expensetrackerpro.firebase.ResultState
 import com.example.expensetrackerpro.google_firebase.GoogleAuthUiClient
 import com.example.expensetrackerpro.google_firebase.SignInResult
 import com.example.expensetrackerpro.google_firebase.SignInViewModel
 import com.example.expensetrackerpro.presentation.navigation.Screens
+import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
-
-
 
 @Composable
 fun SignUpScreen(navController: NavController) {
@@ -74,6 +82,13 @@ fun SignUpScreen(navController: NavController) {
     val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
     val viewModel: SignInViewModel = viewModel()
     val state by viewModel.state.collectAsState()
+
+    val firebaseAuth = FirebaseAuth.getInstance()
+    val authRepo = AuthRepositoryImpl(firebaseAuth, context)
+    val authViewModel = AuthViewModel(authRepo)
+
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
@@ -84,7 +99,6 @@ fun SignUpScreen(navController: NavController) {
                     googleAuthUiClient.signInWithIntent(result.data ?: return@launch)
                 viewModel.onSignInResult(signInResult)
 
-                // Show toast
                 if (signInResult.data != null) {
                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
                     navController.navigate(Screens.HomeScreen.route)
@@ -99,8 +113,6 @@ fun SignUpScreen(navController: NavController) {
             }
         }
     }
-
-
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -134,6 +146,36 @@ fun SignUpScreen(navController: NavController) {
             modifier = Modifier.padding(bottom = 58.5.dp)
         )
 
+        errorMessage?.let { msg ->
+
+            Row(
+                modifier = Modifier
+                    .padding(bottom = 20.dp)
+                    .width(280.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFFFFD7D7))
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Icon(
+                    painter = painterResource(id = R.drawable.warning),
+                    contentDescription = "Warning",
+                    tint = Color(0xFFD32F2F),
+                    modifier = Modifier.size(20.dp)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = msg,
+                    color = Color(0xFFD32F2F),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
         CustomAuthTextFieldEmail(
             value = email,
             onValueChange = { email = it },
@@ -147,7 +189,80 @@ fun SignUpScreen(navController: NavController) {
             icon = R.drawable.lock,
         )
 
-        LoginButton(onClick = {})
+        LoginButton(
+            isLoading = isLoading
+        ) {
+
+            when {
+                email.isBlank() || password.isBlank() -> {
+                    errorMessage = "All fields are required!"
+                    return@LoginButton
+                }
+
+                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                    errorMessage = "Invalid Email Address!"
+                    return@LoginButton
+                }
+
+                password.length < 6 -> {
+                    errorMessage = "Password must be at least 6 characters!"
+                    return@LoginButton
+                }
+
+                else -> {
+                    errorMessage = null
+                    isLoading = true
+
+                    coroutineScope.launch {
+                        authViewModel.loginUser(
+                            AuthUser(
+                                username = "",
+                                email = email,
+                                password = password
+                            )
+                        ).collectLatest { result ->
+                            when (result) {
+
+                                ResultState.Loading -> Unit
+
+                                is ResultState.Error -> {
+                                    errorMessage = when (result.error) {
+                                        is FirebaseAuthInvalidUserException -> {
+                                            "No account found with this email!"
+                                        }
+
+                                        is FirebaseAuthInvalidCredentialsException -> {
+                                            if (result.error.message?.contains("password", true) == true) {
+                                                "Incorrect password!"
+                                            } else {
+                                                "Invalid email address!"
+                                            }
+                                        }
+
+                                        is FirebaseNetworkException -> {
+                                            "No internet connection!"
+                                        }
+
+                                        else -> {
+                                            "Login failed! Please try again."
+                                        }
+                                    }
+                                    isLoading = false
+                                }
+
+                                is ResultState.Success<*> -> {
+                                    Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
+                                    isLoading = false
+                                    navController.navigate(Screens.HomeScreen.route) {
+                                        popUpTo(Screens.SignUpScreen.route) { inclusive = true }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         Text(
             text = "FORGOT PASSWORD",
@@ -185,7 +300,7 @@ fun SignUpScreen(navController: NavController) {
 
         Row {
             Text(
-                text = "Don’t have an account? ",
+                text = "Don't have an account? ",
                 color = Color(0xFF242D35),
                 fontSize = 14.sp
             )
@@ -200,7 +315,6 @@ fun SignUpScreen(navController: NavController) {
         }
     }
 }
-
 @Composable
 fun CustomAuthTextFieldEmail(
     value: String,
@@ -240,7 +354,8 @@ fun CustomAuthTextFieldEmail(
                     .fillMaxSize()
                     .border(1.dp, borderColor, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))                    .padding(horizontal = 12.dp),
+                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -318,7 +433,8 @@ fun CustomAuthTextFieldPassword(
                     .fillMaxSize()
                     .border(1.dp, borderColor, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))                    .padding(horizontal = 12.dp),
+                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
@@ -362,12 +478,11 @@ fun CustomAuthTextFieldPassword(
 }
 
 
-
 @Composable
 fun LoginButton(
+    isLoading: Boolean,
     onClick: () -> Unit
 ) {
-
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf(
             Color(0xFF1E3CFF),
@@ -387,16 +502,24 @@ fun LoginButton(
             )
             .clip(RoundedCornerShape(10.dp))
             .background(gradientBrush)
-            .clickable { onClick() },
+            .clickable(enabled = !isLoading) { onClick() },
         contentAlignment = Alignment.Center
     ) {
 
-        Text(
-            text = "Login",
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(22.dp)
+            )
+        } else {
+            Text(
+                text = "Login",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
