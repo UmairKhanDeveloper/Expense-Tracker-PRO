@@ -48,7 +48,7 @@ fun HomeScreen(navController: NavController) {
             .padding(top = 80.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
+        Text(text = "Home Screen")
         if (userData != null) {
 
             AsyncImage(
@@ -122,8 +122,7 @@ fun HomeScreen(navController: NavController) {
                     fontWeight = FontWeight.Bold
                 )
             }
-        }
-        else {
+        } else {
 
             Text(
                 text = "User Not Logged In",

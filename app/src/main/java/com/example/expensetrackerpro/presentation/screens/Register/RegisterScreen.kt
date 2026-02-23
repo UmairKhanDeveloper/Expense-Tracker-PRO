@@ -1,6 +1,6 @@
 package com.example.expensetrackerpro.presentation.screens.Register
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -67,6 +68,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(navController: NavController) {
+
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -76,6 +78,10 @@ fun RegisterScreen(navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    val InterFont = FontFamily(
+        Font(R.font.inter18ptregular, FontWeight.Normal),
+        Font(R.font.inter18ptbold, FontWeight.Bold)
+    )
     val firebaseAuth = FirebaseAuth.getInstance()
     val authRepo = AuthRepositoryImpl(firebaseAuth, context)
     val authViewModel = AuthViewModel(authRepo)
@@ -93,61 +99,110 @@ fun RegisterScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp),
+            .padding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Spacer(modifier = Modifier.height(64.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "App Logo",
-            modifier = Modifier.size(88.dp)
+            modifier = Modifier
+                .padding(top = 64.dp, bottom = 6.dp)
+                .size(88.dp)
         )
 
         Text(
             text = stringResource(id = R.string.expenseTracker),
-            fontFamily = interFont,
+            fontFamily = InterFont,
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
             color = colorResource(id = R.color.black),
-            modifier = Modifier.padding(bottom = 20.dp)
+            modifier = Modifier.padding(bottom = 58.5.dp)
         )
+
+        Text(
+            text = "Create Your Account",
+            fontFamily = interFont,
+            fontWeight = FontWeight.Bold,
+            fontSize = 22.sp,
+            color = Color(0xFF01E3CFF),
+            modifier = Modifier.padding(top = 12.dp, bottom = 20.dp)
+        )
+
+        errorMessage?.let { msg ->
+            Row(
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .width(280.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFFFFD7D7))
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.warning),
+                    contentDescription = null,
+                    tint = Color(0xFFD32F2F),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = msg,
+                    color = Color(0xFFD32F2F),
+                    fontSize = 13.sp
+                )
+            }
+        }
 
 
         CustomAuthTextFieldUserName(
             value = username,
-            onValueChange = { username = it },
-            hint = "Username",
+            onValueChange = {
+                username = it
+                errorMessage = null
+            },
+            hint = "Enter your full name",
             icon = R.drawable.profile
         )
 
-
         CustomAuthTextFieldEmail(
             value = email,
-            onValueChange = { email = it },
-            hint = "Email",
+            onValueChange = {
+                email = it
+                errorMessage = null
+            },
+            hint = "Enter your email address",
             icon = Icons.Default.Email
         )
 
-
         CustomAuthTextFieldPassword(
             value = password,
-            onValueChange = { password = it },
-            hint = "Password",
+            onValueChange = {
+                password = it
+                errorMessage = null
+            },
+            hint = "Create a strong password",
             icon = R.drawable.lock
         )
 
 
-        LoginButton(onClick = {
+        LoginButton(
+            isLoading = isLoading
+        ) {
+
+            errorMessage = null
+
             when {
+
                 username.isBlank() || email.isBlank() || password.isBlank() -> {
                     errorMessage = "All fields are required!"
                     return@LoginButton
                 }
 
-                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                    errorMessage = "Invalid Email Address!"
+                !android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() -> {
+                    errorMessage = "Invalid email address!"
                     return@LoginButton
                 }
 
@@ -157,60 +212,71 @@ fun RegisterScreen(navController: NavController) {
                 }
 
                 else -> {
-                    errorMessage = null
+
                     isLoading = true
 
                     scope.launch {
                         authViewModel.createUser(
                             AuthUser(
-                                username = username,
-                                email = email,
-                                password = password
+                                username = username.trim(),
+                                email = email.trim(),
+                                password = password.trim()
                             )
                         ).collectLatest { result ->
+
                             when (result) {
+
                                 is ResultState.Error -> {
-                                    errorMessage = "Error creating user: ${result.error.message}"
+                                    errorMessage =
+                                        result.error.message ?: "Registration failed!"
                                     isLoading = false
                                 }
 
-                                ResultState.Loading -> {
-                                    Log.d("Firebase", "Creating user...")
-                                }
+                                ResultState.Loading -> Unit
 
                                 is ResultState.Success<*> -> {
-                                    val firebaseUser = FirebaseAuth.getInstance().currentUser
+
+                                    val firebaseUser =
+                                        FirebaseAuth.getInstance().currentUser
+
                                     firebaseUser?.let { user ->
-                                        val userEmail = user.email ?: email
+
                                         realTimeViewModel.insert(
                                             RealTimeItems(
-                                                userFirstName = username,
-                                                email = userEmail,
-                                                password = password
+                                                userFirstName = username.trim(),
+                                                email = user.email ?: email.trim(),
+                                                password = password.trim()
                                             )
                                         ).collectLatest { dbResult ->
+
                                             when (dbResult) {
+
                                                 is ResultState.Error -> {
                                                     errorMessage =
-                                                        "Error inserting data: ${dbResult.error.message}"
+                                                        dbResult.error.message
+                                                            ?: "Database error!"
                                                     isLoading = false
                                                 }
 
-                                                is ResultState.Loading -> {
-                                                    Log.d(
-                                                        "Firebase",
-                                                        "Inserting data into Realtime Database..."
-                                                    )
-                                                }
+                                                ResultState.Loading -> Unit
 
                                                 is ResultState.Success<*> -> {
-                                                    Log.d("Firebase", "Data inserted successfully")
+
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Registration successful! Please log in.",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+
                                                     FirebaseAuth.getInstance().signOut()
                                                     isLoading = false
-                                                    navController.navigate(Screens.SignUpScreen.route) {
-                                                        popUpTo(Screens.HomeScreen.route) {
-                                                            inclusive = true
-                                                        }
+
+                                                    navController.navigate(
+                                                        Screens.SignUpScreen.route
+                                                    ) {
+                                                        popUpTo(
+                                                            Screens.RegisterScreen.route
+                                                        ) { inclusive = true }
                                                     }
                                                 }
                                             }
@@ -222,19 +288,29 @@ fun RegisterScreen(navController: NavController) {
                     }
                 }
             }
-        })
+        }
+        Spacer(modifier = Modifier.height(16.dp))
 
-        errorMessage?.let { msg ->
+        Row {
             Text(
-                text = msg,
-                color = Color.Red,
+                text = "Already have an account? ",
+                fontSize = 14.sp
+            )
+
+            Text(
+                text = "Sign In",
                 fontSize = 14.sp,
-                modifier = Modifier.padding(top = 12.dp)
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1E3CFF),
+                modifier = Modifier.clickable {
+                    navController.navigate(Screens.SignUpScreen.route)
+                }
             )
         }
+
+        Spacer(modifier = Modifier.height(40.dp))
     }
 }
-
 
 @Composable
 fun CustomAuthTextFieldUserName(
@@ -470,6 +546,7 @@ fun CustomAuthTextFieldPassword(
 
 @Composable
 fun LoginButton(
+    isLoading: Boolean,
     onClick: () -> Unit
 ) {
 
@@ -492,17 +569,24 @@ fun LoginButton(
             )
             .clip(RoundedCornerShape(10.dp))
             .background(gradientBrush)
-            .clickable { onClick() },
+            .clickable(enabled = !isLoading) { onClick() },
         contentAlignment = Alignment.Center
     ) {
 
-        Text(
-            text = "SIGN UP",
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(20.dp)
+            )
+        } else {
+            Text(
+                text = "SIGN UP",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
-
 

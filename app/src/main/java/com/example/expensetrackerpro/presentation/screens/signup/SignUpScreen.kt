@@ -77,6 +77,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SignUpScreen(navController: NavController) {
+
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
@@ -89,15 +90,27 @@ fun SignUpScreen(navController: NavController) {
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+    var isGoogleLoading by remember { mutableStateOf(false) }
+
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
+
         if (result.resultCode == Activity.RESULT_OK) {
+
             coroutineScope.launch {
+
                 val signInResult: SignInResult =
-                    googleAuthUiClient.signInWithIntent(result.data ?: return@launch)
+                    googleAuthUiClient.signInWithIntent(
+                        result.data ?: run {
+                            isGoogleLoading = false
+                            return@launch
+                        }
+                    )
+
                 viewModel.onSignInResult(signInResult)
+                isGoogleLoading = false
 
                 if (signInResult.data != null) {
                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
@@ -111,6 +124,9 @@ fun SignUpScreen(navController: NavController) {
                     ).show()
                 }
             }
+
+        } else {
+            isGoogleLoading = false
         }
     }
 
@@ -122,139 +138,153 @@ fun SignUpScreen(navController: NavController) {
         Font(R.font.inter18ptbold, FontWeight.Bold)
     )
 
-    Column(
-        modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
 
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "App Logo",
+        Column(
             modifier = Modifier
-                .padding(top = 64.dp, bottom = 6.dp)
-                .size(88.dp)
-        )
-
-        Text(
-            text = stringResource(id = R.string.expenseTracker),
-            fontFamily = InterFont,
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            color = colorResource(id = R.color.black),
-            modifier = Modifier.padding(bottom = 58.5.dp)
-        )
-
-        errorMessage?.let { msg ->
-
-            Row(
-                modifier = Modifier
-                    .padding(bottom = 20.dp)
-                    .width(280.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFFFD7D7))
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    painter = painterResource(id = R.drawable.warning),
-                    contentDescription = "Warning",
-                    tint = Color(0xFFD32F2F),
-                    modifier = Modifier.size(20.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = msg,
-                    color = Color(0xFFD32F2F),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-
-        CustomAuthTextFieldEmail(
-            value = email,
-            onValueChange = { email = it },
-            hint = "Email",
-            icon = Icons.Default.Email,
-        )
-        CustomAuthTextFieldPassword(
-            value = password,
-            onValueChange = { password = it },
-            hint = "Password",
-            icon = R.drawable.lock,
-        )
-
-        LoginButton(
-            isLoading = isLoading
+                .verticalScroll(rememberScrollState())
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            when {
-                email.isBlank() || password.isBlank() -> {
-                    errorMessage = "All fields are required!"
-                    return@LoginButton
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .padding(top = 64.dp, bottom = 6.dp)
+                    .size(88.dp)
+            )
+
+            Text(
+                text = stringResource(id = R.string.expenseTracker),
+                fontFamily = InterFont,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                color = colorResource(id = R.color.black),
+                modifier = Modifier.padding(bottom = 58.5.dp)
+            )
+
+            errorMessage?.let { msg ->
+                Row(
+                    modifier = Modifier
+                        .padding(bottom = 20.dp)
+                        .width(280.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFFFFD7D7))
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.warning),
+                        contentDescription = "Warning",
+                        tint = Color(0xFFD32F2F),
+                        modifier = Modifier.size(20.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = msg,
+                        color = Color(0xFFD32F2F),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
+            }
 
-                !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                    errorMessage = "Invalid Email Address!"
-                    return@LoginButton
-                }
+            CustomAuthTextFieldEmail(
+                value = email,
+                onValueChange = { email = it },
+                hint = "Email",
+                icon = Icons.Default.Email,
+            )
 
-                password.length < 6 -> {
-                    errorMessage = "Password must be at least 6 characters!"
-                    return@LoginButton
-                }
+            CustomAuthTextFieldPassword(
+                value = password,
+                onValueChange = { password = it },
+                hint = "Password",
+                icon = R.drawable.lock,
+            )
 
-                else -> {
-                    errorMessage = null
-                    isLoading = true
+            LoginButton(
+                isLoading = isLoading
+            ) {
+                if (isLoading) return@LoginButton
 
-                    coroutineScope.launch {
-                        authViewModel.loginUser(
-                            AuthUser(
-                                username = "",
-                                email = email,
-                                password = password
-                            )
-                        ).collectLatest { result ->
-                            when (result) {
+                errorMessage = null
 
-                                ResultState.Loading -> Unit
+                when {
+                    email.isBlank() || password.isBlank() -> {
+                        errorMessage = "All fields are required!"
+                        return@LoginButton
+                    }
 
-                                is ResultState.Error -> {
-                                    errorMessage = when (result.error) {
-                                        is FirebaseAuthInvalidUserException -> {
-                                            "No account found with this email!"
+                    !android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() -> {
+                        errorMessage = "Invalid Email Address!"
+                        return@LoginButton
+                    }
+
+                    password.length < 6 -> {
+                        errorMessage = "Password must be at least 6 characters!"
+                        return@LoginButton
+                    }
+
+                    else -> {
+
+                        isLoading = true
+
+                        coroutineScope.launch {
+
+                            authViewModel.loginUser(
+                                AuthUser(
+                                    username = "",
+                                    email = email.trim(),
+                                    password = password.trim()
+                                )
+                            ).collectLatest { result ->
+
+                                when (result) {
+
+                                    ResultState.Loading -> Unit
+
+                                    is ResultState.Error -> {
+
+                                        errorMessage = when (result.error) {
+
+                                            is FirebaseAuthInvalidUserException ->
+                                                "No account found with this email!"
+
+                                            is FirebaseAuthInvalidCredentialsException ->
+                                                "Incorrect password!"
+
+                                            is FirebaseNetworkException ->
+                                                "No internet connection!"
+
+                                            else ->
+                                                "Login failed! Please try again."
                                         }
 
-                                        is FirebaseAuthInvalidCredentialsException -> {
-                                            if (result.error.message?.contains("password", true) == true) {
-                                                "Incorrect password!"
-                                            } else {
-                                                "Invalid email address!"
+                                        isLoading = false
+                                    }
+
+                                    is ResultState.Success<*> -> {
+
+                                        isLoading = false
+
+                                        Toast.makeText(
+                                            context,
+                                            "Login Successful!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+
+                                        navController.navigate(Screens.HomeScreen.route) {
+                                            popUpTo(Screens.SignUpScreen.route) {
+                                                inclusive = true
                                             }
                                         }
-
-                                        is FirebaseNetworkException -> {
-                                            "No internet connection!"
-                                        }
-
-                                        else -> {
-                                            "Login failed! Please try again."
-                                        }
-                                    }
-                                    isLoading = false
-                                }
-
-                                is ResultState.Success<*> -> {
-                                    Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                                    isLoading = false
-                                    navController.navigate(Screens.HomeScreen.route) {
-                                        popUpTo(Screens.SignUpScreen.route) { inclusive = true }
                                     }
                                 }
                             }
@@ -262,56 +292,79 @@ fun SignUpScreen(navController: NavController) {
                     }
                 }
             }
-        }
+            Text(
+                text = "FORGOT PASSWORD",
+                color = Color(0xFF6B7580),
+                fontSize = 14.sp,
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .clickable {
+                        navController.navigate(Screens.ForgetPasswordScreen.route)
+                    }
+            )
 
-        Text(
-            text = "FORGOT PASSWORD",
-            color = Color(0xFF6B7580),
-            fontSize = 14.sp,
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .clickable { navController.navigate(Screens.ForgetPasswordScreen.route) }
-        )
+            Text(
+                text = "Or",
+                color = Color(0xFF242D35),
+                fontSize = 14.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
-        Text(
-            text = "Or",
-            color = Color(0xFF242D35),
-            fontSize = 14.sp,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+            SocialButton(
+                text = "CONTINUE WITH GOOGLE",
+                icon = R.drawable.flat_color_icons_google
+            ) {
 
-        SocialButton(
-            text = "CONTINUE WITH GOOGLE",
-            icon = R.drawable.flat_color_icons_google
-        ) {
-            coroutineScope.launch {
-                val intentSender = googleAuthUiClient.signIn()
-                intentSender?.let {
-                    launcher.launch(IntentSenderRequest.Builder(it).build())
+                coroutineScope.launch {
+
+                    isGoogleLoading = true
+
+                    val intentSender = googleAuthUiClient.signIn()
+
+                    intentSender?.let {
+                        launcher.launch(
+                            IntentSenderRequest.Builder(it).build()
+                        )
+                    } ?: run {
+                        isGoogleLoading = false
+                    }
                 }
+            }
+
+            SocialButton(
+                text = "CONTINUE WITH FACEBOOK",
+                icon = R.drawable.ant_design_apple_filled,
+                onClick = {}
+            )
+
+            Row {
+                Text(
+                    text = "Don't have an account? ",
+                    color = Color(0xFF242D35),
+                    fontSize = 14.sp
+                )
+
+                Text(
+                    text = "Register here",
+                    color = Color(0xFF0E33F3),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable {
+                        navController.navigate(Screens.RegisterScreen.route)
+                    }
+                )
             }
         }
 
-        SocialButton(
-            text = "CONTINUE WITH FACEBOOK",
-            icon = R.drawable.ant_design_apple_filled,
-            onClick = {}
-        )
-
-        Row {
-            Text(
-                text = "Don't have an account? ",
-                color = Color(0xFF242D35),
-                fontSize = 14.sp
-            )
-
-            Text(
-                text = "Register here",
-                color = Color(0xFF0E33F3),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable { navController.navigate(Screens.RegisterScreen.route) }
-            )
+        if (isGoogleLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0x88000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF1E3CFF))
+            }
         }
     }
 }
