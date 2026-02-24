@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -45,6 +46,7 @@ import coil.compose.AsyncImage
 import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.presentation.component.localTextSize
 import com.example.expensetrackerpro.presentation.navigation.Screens
+import com.example.expensetrackerpro.presentation.screens.splash.PrefsHelper
 import kotlinx.coroutines.launch
 
 data class OnboardingScreen(
@@ -72,8 +74,11 @@ fun OnBoardingScreen(navController: NavController) {
             "Tracking your expense help make sure you don't overspend"
         )
     )
+    val context = LocalContext.current
+    val prefs = PrefsHelper(context)
 
     IntroScreen(list = list) {
+        prefs.setOnboardingShown(true)
         navController.navigate(Screens.SignUpScreen.route) {
             popUpTo(Screens.OnBoardingScreen.route) { inclusive = true }
         }

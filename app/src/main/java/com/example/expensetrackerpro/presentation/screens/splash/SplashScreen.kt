@@ -1,5 +1,7 @@
 package com.example.expensetrackerpro.presentation.screens.splash
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.view.animation.OvershootInterpolator
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -16,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -31,10 +34,12 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(navController: NavHostController) {
-
+    val context = LocalContext.current
     val space = LocalSpace.current
     val textSize = localTextSize.current
     val logoScale = remember { Animatable(0f) }
+
+    val prefs = PrefsHelper(context)
 
     val InterFont = FontFamily(
         Font(R.font.inter18ptregular, FontWeight.Normal),
@@ -49,11 +54,26 @@ fun SplashScreen(navController: NavHostController) {
             })
         )
         delay(1500)
-        navController.navigate(Screens.OnBoardingScreen.route) {
-            popUpTo(Screens.SplashScreen.route) { inclusive = true }
+        when {
+            prefs.isLoggedIn() -> {
+                navController.navigate(Screens.HomeScreen.route) {
+                    popUpTo(Screens.SplashScreen.route) { inclusive = true }
+                }
+            }
+            !prefs.isOnboardingShown() -> {
+                navController.navigate(Screens.OnBoardingScreen.route) {
+                    popUpTo(Screens.SplashScreen.route) { inclusive = true }
+                }
+            }
+            else -> {
+                navController.navigate(Screens.SignUpScreen.route) {
+                    popUpTo(Screens.SplashScreen.route) { inclusive = true }
+                }
+            }
         }
-    }
 
+
+    }
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -95,3 +115,31 @@ fun SplashScreen(navController: NavHostController) {
     }
 }
 
+
+class PrefsHelper(context: Context) {
+
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+
+    companion object {
+        private const val ONBOARDING_SHOWN = "onboarding_shown"
+        private const val IS_LOGGED_IN = "is_logged_in"
+
+    }
+
+    fun isOnboardingShown(): Boolean {
+        return prefs.getBoolean(ONBOARDING_SHOWN, false)
+    }
+
+    fun setOnboardingShown(shown: Boolean) {
+        prefs.edit().putBoolean(ONBOARDING_SHOWN, shown).apply()
+    }
+
+    fun isLoggedIn(): Boolean {
+        return prefs.getBoolean(IS_LOGGED_IN, false)
+    }
+
+    fun setLoggedIn(loggedIn: Boolean) {
+        prefs.edit().putBoolean(IS_LOGGED_IN, loggedIn).apply()
+    }
+}

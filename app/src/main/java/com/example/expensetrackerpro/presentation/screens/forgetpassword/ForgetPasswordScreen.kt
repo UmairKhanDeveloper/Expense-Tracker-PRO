@@ -1,16 +1,34 @@
 package com.example.expensetrackerpro.presentation.screens.forgetpassword
 
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -18,57 +36,47 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.expensetrackerpro.R
-import com.example.expensetrackerpro.presentation.component.LocalHeight
-import com.example.expensetrackerpro.presentation.component.LocalOffset
-import com.example.expensetrackerpro.presentation.component.LocalPadding
-import com.example.expensetrackerpro.presentation.component.LocalRadius
-import com.example.expensetrackerpro.presentation.component.LocalSpace
-import com.example.expensetrackerpro.presentation.component.LocalWidth
-import com.example.expensetrackerpro.presentation.component.localTextSize
 import com.example.expensetrackerpro.presentation.navigation.Screens
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ForgetPasswordScreen(navController: NavController) {
+fun ForgetPasswordScreen(
+    navController: NavController,
+    email: String
+) {
+    val context = LocalContext.current
+    val firebaseAuth = FirebaseAuth.getInstance()
 
-    val padding = LocalPadding.current
-    val height = LocalHeight.current
-    val width = LocalWidth.current
-    val space = LocalSpace.current
-    val radius = LocalRadius.current
-    val textSize = localTextSize.current
-    val offset = LocalOffset.current
-
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    var emailState by rememberSaveable { mutableStateOf(email) }
+    var message by rememberSaveable { mutableStateOf("") }
+    var isLoading by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         containerColor = colorResource(id = R.color.white),
         topBar = {
             TopAppBar(
                 title = {},
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorResource(id = R.color.white)
-                ),
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             painter = painterResource(id = R.drawable.button),
-                            contentDescription = "",
-                            tint = colorResource(id = R.color.black)
+                            contentDescription = "Back",
+                            tint = Color.Black
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White
+                )
             )
         }
     ) { padding ->
@@ -77,54 +85,95 @@ fun ForgetPasswordScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal =24.dp ),
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.Start
         ) {
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             Text(
-                text = "Create Your New Password",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF2B2F36)
+                text = "Forgot Password",
+                fontSize = 26.sp,
+                color = Color.Black
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Your new password must be different\nfrom previous password.",
+                text = "Enter your email to receive reset link",
                 fontSize = 14.sp,
-                color = Color(0xFF9AA0A6)
+                color = Color.Gray
             )
 
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
-            CustomAuthTextFieldForgetPassword(
-                value = password,
-                onValueChange = { password = it },
-                hint = "Password",
-                icon = R.drawable.lock,
+            EmailTextField(
+                value = emailState,
+                onValueChange = { emailState = it }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            CustomAuthTextFieldForgetPassword(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                hint = "Confirm Password",
-                icon = R.drawable.lock,
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            ValidationRow(true, "Must not contain your name or email")
-            ValidationRow(false, "At least 8 characters")
-            ValidationRow(false, "Contains a symbol or a number")
+            if (message.isNotEmpty()) {
+                Text(
+                    text = message,
+                    color = if (message.contains("success", true))
+                        Color(0xFF2E7D32) else Color.Red,
+                    fontSize = 13.sp
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            ResetPassword(onClick = {navController.navigate(Screens.PasswordUpdateScreen.route)})
+            ResetPasswordButton(
+                isLoading = isLoading
+            ) {
+
+                message = ""
+
+                when {
+                    emailState.isBlank() -> {
+                        message = "Email cannot be empty"
+                        return@ResetPasswordButton
+                    }
+
+                    !android.util.Patterns.EMAIL_ADDRESS
+                        .matcher(emailState.trim())
+                        .matches() -> {
+                        message = "Invalid email format"
+                        return@ResetPasswordButton
+                    }
+                }
+
+                isLoading = true
+
+                firebaseAuth
+                    .sendPasswordResetEmail(emailState.trim())
+                    .addOnCompleteListener { task ->
+
+                        isLoading = false
+
+                        if (task.isSuccessful) {
+
+                            message = "Success! Reset link sent."
+
+                            Handler(Looper.getMainLooper()).postDelayed({
+
+                                navController.navigate(
+                                    Screens.PasswordUpdateScreen.route
+                                ) {
+                                    popUpTo(Screens.ForgetPasswordScreen.route) {
+                                        inclusive = true
+                                    }
+                                }
+
+                            }, 800)
+
+                        } else {
+                            message = task.exception?.message ?: "Something went wrong"
+                        }
+                    }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
         }
@@ -132,54 +181,16 @@ fun ForgetPasswordScreen(navController: NavController) {
 }
 
 @Composable
-fun ValidationRow(selected: Boolean, text: String) {
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Icon(
-            painter = painterResource(id = R.drawable.check),
-            contentDescription = "",
-            tint = if (selected) Color(0xFF2962FF) else Color(0xFF9AA0A6)
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Text(
-            text = text,
-            fontSize = 14.sp,
-            color = if (selected)
-                Color(0xFF2962FF)
-            else
-                Color(0xFF9AA0A6)
-        )
-    }
-}
-
-@Composable
-fun CustomAuthTextFieldForgetPassword(
+fun EmailTextField(
     value: String,
-    onValueChange: (String) -> Unit,
-    hint: String,
-    icon: Int
+    onValueChange: (String) -> Unit
 ) {
-
-    var passwordVisible by remember { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
 
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        visualTransformation =
-            if (passwordVisible)
-                VisualTransformation.None
-            else
-                PasswordVisualTransformation(),
         textStyle = TextStyle(
             fontSize = 14.sp,
             color = Color.Black
@@ -187,70 +198,41 @@ fun CustomAuthTextFieldForgetPassword(
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
-            .onFocusChanged {
-                isFocused = it.isFocused
-            },
+            .onFocusChanged { isFocused = it.isFocused },
         decorationBox = { innerTextField ->
-
-            val borderColor =
-                if (isFocused)
-                    Color(0xFF37ABFF)
-                else
-                    Color(0XFF9BA1A8)
-
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .border(1.dp, borderColor, RoundedCornerShape(10.dp))
+                    .border(
+                        1.dp,
+                        if (isFocused) Color.Blue else Color.Gray,
+                        RoundedCornerShape(10.dp)
+                    )
                     .clip(RoundedCornerShape(10.dp))
-                    .background(if (isFocused) Color.White else colorResource(id = R.color.light_gray))                    .padding(horizontal = 12.dp),
+                    .background(colorResource(id = R.color.light_gray))
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
-                Icon(
-                    painter = painterResource(id = icon),
-                    contentDescription = null,
-                    tint = Color.Gray
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
                 Box(Modifier.weight(1f)) {
-
                     if (value.isEmpty()) {
                         Text(
-                            text = hint,
-                            color = Color(0XFF9BA1A8),
+                            text = "Enter Email",
+                            color = Color.Gray,
                             fontSize = 14.sp
                         )
                     }
-
                     innerTextField()
                 }
-
-                Icon(
-                    imageVector = if (passwordVisible)
-                        Icons.Filled.Visibility
-                    else
-                        Icons.Filled.VisibilityOff,
-                    contentDescription = null,
-                    tint = Color.Gray,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clickable {
-                            passwordVisible = !passwordVisible
-                        }
-                )
             }
         }
     )
 }
 
 @Composable
-fun ResetPassword(
+fun ResetPasswordButton(
+    isLoading: Boolean,
     onClick: () -> Unit
 ) {
-
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf(
             Color(0xFF1E3CFF),
@@ -262,22 +244,22 @@ fun ResetPassword(
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(10.dp),
-                clip = false
-            )
+            .shadow(8.dp, RoundedCornerShape(10.dp))
             .clip(RoundedCornerShape(10.dp))
             .background(gradientBrush)
-            .clickable { onClick() },
+            .clickable(enabled = !isLoading) { onClick() },
         contentAlignment = Alignment.Center
     ) {
-
-        Text(
-            text = "RESET PASSWORD",
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = Color.White,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(
+                text = "RESET PASSWORD",
+                color = Color.White
+            )
+        }
     }
 }

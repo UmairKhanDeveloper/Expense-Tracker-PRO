@@ -49,8 +49,8 @@ fun PasswordUpdateScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Password Updated!",
-                fontSize = 28.sp,
+                text = "Reset Link Sent!",
+                fontSize = 26.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF2B2F36)
             )
@@ -58,15 +58,18 @@ fun PasswordUpdateScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Your password has been set up successfully.",
+                text = "We’ve sent a password reset link to your email address. Please check your inbox. If you don’t see the email, check your spam folder as well.",
                 fontSize = 14.sp,
                 color = Color(0xFF9AA0A6),
-                lineHeight = 20.sp, textAlign = TextAlign.Center
+                lineHeight = 20.sp,
+                textAlign = TextAlign.Center
             )
         }
 
         ContinueButton {
-            navController.navigate(Screens.SignUpScreen.route)
+            navController.navigate(Screens.SignUpScreen.route) {
+                popUpTo(0)
+            }
         }
     }
 }

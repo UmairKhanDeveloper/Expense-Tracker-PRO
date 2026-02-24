@@ -68,6 +68,7 @@ import com.example.expensetrackerpro.google_firebase.GoogleAuthUiClient
 import com.example.expensetrackerpro.google_firebase.SignInResult
 import com.example.expensetrackerpro.google_firebase.SignInViewModel
 import com.example.expensetrackerpro.presentation.navigation.Screens
+import com.example.expensetrackerpro.presentation.screens.splash.PrefsHelper
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -83,6 +84,7 @@ fun SignUpScreen(navController: NavController) {
     val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
     val viewModel: SignInViewModel = viewModel()
     val state by viewModel.state.collectAsState()
+    val prefs = PrefsHelper(context)
 
     val firebaseAuth = FirebaseAuth.getInstance()
     val authRepo = AuthRepositoryImpl(firebaseAuth, context)
@@ -113,8 +115,12 @@ fun SignUpScreen(navController: NavController) {
                 isGoogleLoading = false
 
                 if (signInResult.data != null) {
+                    isGoogleLoading = false
+                    prefs.setLoggedIn(true)
                     Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                    navController.navigate(Screens.HomeScreen.route)
+                    navController.navigate(Screens.HomeScreen.route) {
+                        popUpTo(Screens.SignUpScreen.route) { inclusive = true }
+                    }
                     viewModel.resetState()
                 } else {
                     Toast.makeText(
@@ -273,17 +279,12 @@ fun SignUpScreen(navController: NavController) {
                                     is ResultState.Success<*> -> {
 
                                         isLoading = false
+                                        prefs.setLoggedIn(true)
 
-                                        Toast.makeText(
-                                            context,
-                                            "Login Successful!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
 
                                         navController.navigate(Screens.HomeScreen.route) {
-                                            popUpTo(Screens.SignUpScreen.route) {
-                                                inclusive = true
-                                            }
+                                            popUpTo(Screens.SignUpScreen.route) { inclusive = true }
                                         }
                                     }
                                 }
@@ -299,7 +300,20 @@ fun SignUpScreen(navController: NavController) {
                 modifier = Modifier
                     .padding(bottom = 16.dp)
                     .clickable {
-                        navController.navigate(Screens.ForgetPasswordScreen.route)
+
+                        if (email.isNotBlank()) {
+
+                            navController.navigate(
+                                Screens.ForgetPasswordScreen.route +
+                                        "/${android.net.Uri.encode(email)}"
+                            )
+
+                        } else {
+
+                            navController.navigate(
+                                Screens.ForgetPasswordScreen.route + "/"
+                            )
+                        }
                     }
             )
 

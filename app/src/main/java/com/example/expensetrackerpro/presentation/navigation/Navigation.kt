@@ -2,8 +2,10 @@ package com.example.expensetrackerpro.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.expensetrackerpro.presentation.screens.Register.RegisterScreen
 import com.example.expensetrackerpro.presentation.screens.forgetpassword.ForgetPasswordScreen
 import com.example.expensetrackerpro.presentation.screens.home.HomeScreen
@@ -19,7 +21,23 @@ fun Navigation(navController: NavHostController) {
         composable(Screens.OnBoardingScreen.route) { OnBoardingScreen(navController) }
         composable(Screens.HomeScreen.route) { HomeScreen(navController) }
         composable(Screens.SignUpScreen.route) { SignUpScreen(navController) }
-        composable(Screens.ForgetPasswordScreen.route) { ForgetPasswordScreen(navController) }
+        composable(
+            route = Screens.ForgetPasswordScreen.route + "/{email}",
+            arguments = listOf(
+                navArgument("email") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+
+            ForgetPasswordScreen(
+                navController,
+                 email
+            )
+        }
         composable(Screens.PasswordUpdateScreen.route) { PasswordUpdateScreen(navController) }
         composable(Screens.RegisterScreen.route) { RegisterScreen(navController) }
     }
