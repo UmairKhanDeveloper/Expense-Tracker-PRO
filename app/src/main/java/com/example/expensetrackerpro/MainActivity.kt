@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
+import com.example.expensetrackerpro.presentation.navigation.NavEntry
 import com.example.expensetrackerpro.presentation.navigation.Navigation
 
 class MainActivity : ComponentActivity() {
@@ -12,8 +13,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val navController = rememberNavController()
-            Navigation(navController)
+            NavEntry()
         }
     }
 }
