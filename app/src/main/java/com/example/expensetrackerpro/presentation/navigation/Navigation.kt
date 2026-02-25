@@ -1,26 +1,42 @@
 package com.example.expensetrackerpro.presentation.navigation
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -71,22 +87,93 @@ fun Navigation(navController: NavHostController) {
     }
 }
 
-sealed class Screens(val route: String, val title: String, val icon: Int) {
-    object SplashScreen : Screens("SplashScreen", "SplashScreen", icon = R.drawable.setting)
-    object OnBoardingScreen : Screens("OnBoardingScreen", "OnBoardingScreen", icon = R.drawable.setting)
-    object HomeScreen : Screens("HomeScreen", "Home", icon = R.drawable.home)
-    object SignUpScreen : Screens("SignUpScreen", "SignUpScreen", icon = R.drawable.setting)
-    object ForgetPasswordScreen : Screens("ForgetPasswordScreen", "ForgetPasswordScreen", icon = R.drawable.setting)
-    object PasswordUpdateScreen : Screens("PasswordUpdateScreen", "PasswordUpdateScreen", icon = R.drawable.setting)
-    object RegisterScreen : Screens("RegisterScreen", "RegisterScreen", icon = R.drawable.setting)
-    object TaskScreen : Screens("TaskScreen", "Tasks", icon = R.drawable.task)
-    object AddScreen : Screens("AddScreen", "Add", icon = R.drawable.setting)
-    object NotificationScreen : Screens("NotificationScreen", "Notifications", icon = R.drawable.notification)
-    object SettingScreen : Screens("SettingScreen", "Settings", icon = R.drawable.setting)
-}
+sealed class Screens(
+    val route: String,
+    val title: String,
+    val filledIcon: ImageVector,
+    val outlinedIcon: ImageVector
+) {
 
+    object SplashScreen : Screens(
+        "SplashScreen",
+        "Splash",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+
+    object OnBoardingScreen : Screens(
+        "OnBoardingScreen",
+        "OnBoarding",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+
+    object HomeScreen : Screens(
+        "HomeScreen",
+        "Home",
+        Icons.Filled.Home,
+        Icons.Outlined.Home
+    )
+
+    object TaskScreen : Screens(
+        "TaskScreen",
+        "Tasks",
+        Icons.Filled.CheckCircle,
+        Icons.Outlined.CheckCircle
+    )
+
+    object NotificationScreen : Screens(
+        "NotificationScreen",
+        "Notifications",
+        Icons.Filled.Notifications,
+        Icons.Outlined.Notifications
+    )
+
+    object SettingScreen : Screens(
+        "SettingScreen",
+        "Settings",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+
+    object AddScreen : Screens(
+        "AddScreen",
+        "Add",
+        Icons.Filled.Add,
+        Icons.Outlined.Add
+    )
+
+    object SignUpScreen : Screens(
+        "SignUpScreen",
+        "Signup",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+
+    object ForgetPasswordScreen : Screens(
+        "ForgetPasswordScreen",
+        "Forget",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+
+    object PasswordUpdateScreen : Screens(
+        "PasswordUpdateScreen",
+        "Update",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+
+    object RegisterScreen : Screens(
+        "RegisterScreen",
+        "Register",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+}
 @Composable
 fun BottomNavigation(navController: NavController) {
+
     val items = listOf(
         Screens.HomeScreen,
         Screens.TaskScreen,
@@ -100,21 +187,22 @@ fun BottomNavigation(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(70.dp)
     ) {
-        // Bottom Navigation Bar
+
         NavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .height(64.dp),
-            containerColor = Color(0xFFF5F5F5),
+                .height(70.dp),
+            containerColor = Color(0xFFf8f9fa),
             tonalElevation = 0.dp
         ) {
+
             items.forEachIndexed { index, screen ->
-                // Skip middle position for FAB
-                if (index == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
+
+                if (index == 2) {
+                    Spacer(modifier = Modifier.width(70.dp))
                 }
 
                 NavigationBarItem(
@@ -127,39 +215,40 @@ fun BottomNavigation(navController: NavController) {
                         }
                     },
                     icon = {
+
                         BadgedBox(
                             badge = {
                                 if (screen == Screens.NotificationScreen) {
                                     Badge(
-                                        containerColor = Color(0xFFFF4444),
-                                        contentColor = Color.White
-                                    ) {
-                                        // Small dot badge
-                                    }
+                                        containerColor = Color.Red,
+                                        modifier = Modifier.size(8.dp)
+                                    ) {}
                                 }
                             }
                         ) {
+                            val isSelected = currentRoute == screen.route
+
                             Icon(
-                                painter = painterResource(screen.icon!!),
-                                contentDescription = screen.title
+                                imageVector = if (isSelected)
+                                    screen.filledIcon
+                                else
+                                    screen.outlinedIcon,
+                                contentDescription = screen.title,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     },
-                    label = {
-
-                    },
+                    label = {},
+                    alwaysShowLabel = false,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = Color(0xFF2196F3),
+                        selectedIconColor = Color(0xFF2962FF),
                         unselectedIconColor = Color.Gray,
-                        selectedTextColor = Color(0xFF2196F3),
-                        unselectedTextColor = Color.Gray,
                         indicatorColor = Color.Transparent
                     )
                 )
             }
         }
 
-        // Floating Action Button in Center
         FloatingActionButton(
             onClick = {
                 navController.navigate(Screens.AddScreen.route) {
@@ -168,21 +257,20 @@ fun BottomNavigation(navController: NavController) {
             },
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(y = (-8).dp)
-                .size(56.dp)
+                .offset(y = (-10).dp)
+                .size(64.dp)
                 .zIndex(1f),
             shape = CircleShape,
-            containerColor = Color(0xFF2196F3),
+            containerColor = Color(0xFF2962FF),
             contentColor = Color.White,
             elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = 6.dp,
-                pressedElevation = 8.dp
+                defaultElevation = 8.dp
             )
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "Add",
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(30.dp)
             )
         }
     }
@@ -191,6 +279,7 @@ fun BottomNavigation(navController: NavController) {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun NavEntry() {
+
     val navController = rememberNavController()
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -206,13 +295,18 @@ fun NavEntry() {
         else -> true
     }
 
-    Scaffold(
-        bottomBar = {
-            if (showBottomNav) {
+    if (showBottomNav) {
+
+        Scaffold(
+            bottomBar = {
                 BottomNavigation(navController)
             }
+        ) {
+                Navigation(navController)
+
         }
-    ) {
+
+    } else {
         Navigation(navController)
     }
 }
