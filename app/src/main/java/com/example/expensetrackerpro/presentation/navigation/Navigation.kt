@@ -1,6 +1,7 @@
 package com.example.expensetrackerpro.presentation.navigation
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,9 +34,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
@@ -46,9 +48,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.expensetrackerpro.R
 import com.example.expensetrackerpro.presentation.screens.Register.RegisterScreen
 import com.example.expensetrackerpro.presentation.screens.add.AddScreen
+import com.example.expensetrackerpro.presentation.screens.expense.TotalExpenseScreen
 import com.example.expensetrackerpro.presentation.screens.forgetpassword.ForgetPasswordScreen
 import com.example.expensetrackerpro.presentation.screens.home.HomeScreen
 import com.example.expensetrackerpro.presentation.screens.notification.NotificationScreen
@@ -84,6 +86,7 @@ fun Navigation(navController: NavHostController) {
         composable(Screens.AddScreen.route) { AddScreen(navController) }
         composable(Screens.NotificationScreen.route) { NotificationScreen(navController) }
         composable(Screens.SettingScreen.route) { SettingScreen(navController) }
+        composable(Screens.TotalExpenseScreen.route) { TotalExpenseScreen(navController) }
     }
 }
 
@@ -170,7 +173,15 @@ sealed class Screens(
         Icons.Filled.Settings,
         Icons.Outlined.Settings
     )
+
+    object TotalExpenseScreen : Screens(
+        "TotalExpenseScreen",
+        "TotalExpenseScreen",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
 }
+
 @Composable
 fun BottomNavigation(navController: NavController) {
 
@@ -249,6 +260,13 @@ fun BottomNavigation(navController: NavController) {
             }
         }
 
+        val gradientBrush = Brush.horizontalGradient(
+            colors = listOf(
+                Color(0xFF1E3CFF),
+                Color(0xFF2BB6FF)
+            )
+        )
+
         FloatingActionButton(
             onClick = {
                 navController.navigate(Screens.AddScreen.route) {
@@ -261,17 +279,24 @@ fun BottomNavigation(navController: NavController) {
                 .size(64.dp)
                 .zIndex(1f),
             shape = CircleShape,
-            containerColor = Color(0xFF2962FF),
-            contentColor = Color.White,
-            elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = 8.dp
-            )
+            containerColor = Color.Transparent,
+            elevation = FloatingActionButtonDefaults.elevation(8.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add",
-                modifier = Modifier.size(30.dp)
-            )
+
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(CircleShape)
+                    .background(gradientBrush),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add",
+                    tint = Color.White,
+                    modifier = Modifier.size(30.dp)
+                )
+            }
         }
     }
 }
@@ -292,6 +317,8 @@ fun NavEntry() {
         Screens.RegisterScreen.route,
         Screens.ForgetPasswordScreen.route,
         Screens.PasswordUpdateScreen.route -> false
+
+        Screens.TotalExpenseScreen.route -> false
         else -> true
     }
 
@@ -302,7 +329,7 @@ fun NavEntry() {
                 BottomNavigation(navController)
             }
         ) {
-                Navigation(navController)
+            Navigation(navController)
 
         }
 

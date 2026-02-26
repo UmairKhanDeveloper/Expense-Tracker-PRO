@@ -41,6 +41,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.expensetrackerpro.google_firebase.GoogleAuthUiClient
 import com.example.expensetrackerpro.presentation.navigation.BottomNavigation
+import com.example.expensetrackerpro.presentation.navigation.Screens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -71,7 +72,12 @@ fun HomeScreen(navController: NavController) {
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF0066FF)),
+                            .background(brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(0xFF1E3CFF),
+                                    Color(0xFF2BB6FF)
+                                )
+                            )),
                         contentAlignment = Alignment.Center
                     ) {
                         if (userData?.profilePictureUrl != null) {
@@ -137,13 +143,13 @@ fun HomeScreen(navController: NavController) {
 
             }
 
-            StatsCardsSection()
+            StatsCardsSection(navController = navController)
         }
     }
 }
 
 @Composable
-fun StatsCardsSection() {
+fun StatsCardsSection(navController: NavController) {
 
     var selectedIndex by remember { mutableStateOf(1) }
 
@@ -170,6 +176,8 @@ fun StatsCardsSection() {
             isSelected = selectedIndex == 2
         ) {
             selectedIndex = 2
+            navController.navigate(Screens.TotalExpenseScreen.route)
+
         }
 
         StatCard(
@@ -190,14 +198,14 @@ fun StatCard(
     onClick: () -> Unit
 ) {
 
-    val gradientBrush = Brush.linearGradient(
+   val  brush = Brush.horizontalGradient(
         colors = listOf(
-            Color(0xFF3B82F6),
-            Color(0xFF2563EB)
+            Color(0xFF1E3CFF),
+            Color(0xFF2BB6FF)
         )
     )
 
-    val background = if (isSelected) gradientBrush else SolidColor(Color(0xFFFFFFFF))
+    val background = if (isSelected) brush else SolidColor(Color(0xFFFFFFFF))
     val contentColor = if (isSelected) Color.White else Color.Black
 
     Box(
@@ -269,12 +277,14 @@ fun SavingsRemindBudgetBar(
 
             val isSelected = selectedIndex == index
 
-            val gradientBrush = Brush.verticalGradient(
+            val gradientBrush = Brush.horizontalGradient(
                 colors = listOf(
-                    Color(0xFF4A90E2),
-                    Color(0xFF2F6EDC)
+                    Color(0xFF1E3CFF),
+                    Color(0xFF2BB6FF)
                 )
             )
+
+
 
             val backgroundBrush =
                 if (isSelected) gradientBrush
@@ -345,7 +355,7 @@ fun PagerIndicator(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 24.dp, bottom = 8.dp), // ✅ breathing space
+            .padding(top = 24.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.Center
     ) {
 
@@ -357,7 +367,7 @@ fun PagerIndicator(
                 modifier = Modifier
                     .padding(horizontal = 5.dp)
                     .height(6.dp)
-                    .width(if (isSelected) 20.dp else 20.dp) // ✅ professional ratio
+                    .width(if (isSelected) 20.dp else 20.dp)
                     .clip(RoundedCornerShape(50))
                     .background(
                         if (isSelected)
@@ -428,7 +438,6 @@ fun TransactionItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        // LEFT SIDE
         Row(verticalAlignment = Alignment.CenterVertically) {
 
             Box(
@@ -466,7 +475,6 @@ fun TransactionItem(
             }
         }
 
-        // RIGHT SIDE
         Column(
             horizontalAlignment = Alignment.End
         ) {
