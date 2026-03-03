@@ -50,6 +50,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.expensetrackerpro.presentation.screens.Register.RegisterScreen
 import com.example.expensetrackerpro.presentation.screens.add.AddScreen
+import com.example.expensetrackerpro.presentation.screens.addIncome.AddExpense
+import com.example.expensetrackerpro.presentation.screens.addIncome.AddIncome
 import com.example.expensetrackerpro.presentation.screens.expense.TotalExpenseScreen
 import com.example.expensetrackerpro.presentation.screens.forgetpassword.ForgetPasswordScreen
 import com.example.expensetrackerpro.presentation.screens.home.HomeScreen
@@ -87,6 +89,8 @@ fun Navigation(navController: NavHostController) {
         composable(Screens.NotificationScreen.route) { NotificationScreen(navController) }
         composable(Screens.SettingScreen.route) { SettingScreen(navController) }
         composable(Screens.TotalExpenseScreen.route) { TotalExpenseScreen(navController) }
+        composable(Screens.AddIncome.route) { AddIncome(navController) }
+        composable(Screens.AddExpense.route) { AddExpense(navController) }
     }
 }
 
@@ -177,6 +181,19 @@ sealed class Screens(
     object TotalExpenseScreen : Screens(
         "TotalExpenseScreen",
         "TotalExpenseScreen",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+
+    object AddIncome : Screens(
+        "AddIncome",
+        "AddIncome",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+    object AddExpense : Screens(
+        "AddExpense",
+        "AddExpense",
         Icons.Filled.Settings,
         Icons.Outlined.Settings
     )
@@ -317,8 +334,10 @@ fun NavEntry() {
         Screens.RegisterScreen.route,
         Screens.ForgetPasswordScreen.route,
         Screens.PasswordUpdateScreen.route -> false
-
         Screens.TotalExpenseScreen.route -> false
+        Screens.AddScreen.route -> false
+        Screens.AddIncome.route -> false
+        Screens.AddExpense.route -> false
         else -> true
     }
 

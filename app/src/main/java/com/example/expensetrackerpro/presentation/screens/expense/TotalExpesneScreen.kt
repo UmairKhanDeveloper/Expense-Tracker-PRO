@@ -2,7 +2,6 @@ package com.example.expensetrackerpro.presentation.screens.expense
 
 import android.annotation.SuppressLint
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,30 +9,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -61,7 +51,6 @@ import androidx.navigation.NavController
 import com.example.expensetrackerpro.R
 import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -164,7 +153,7 @@ fun WeekCalendar(
                 Icon(
                     painter = painterResource(id = R.drawable.arrowleft),
                     contentDescription = "",
-                    modifier = Modifier.clickable{
+                    modifier = Modifier.clickable {
                         currentWeekStart = currentWeekStart.minusWeeks(1)
                     }
                 )
@@ -180,7 +169,7 @@ fun WeekCalendar(
                 Icon(
                     painter = painterResource(id = R.drawable.arrowright),
                     contentDescription = "",
-                    modifier = Modifier.clickable{
+                    modifier = Modifier.clickable {
                         currentWeekStart = currentWeekStart.plusWeeks(1)
                     }
                 )
@@ -204,7 +193,6 @@ fun WeekCalendar(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // 🔹 WEEK STRIP (LIKE IMAGE)
             Row(Modifier.fillMaxWidth()) {
 
                 weekDates.forEach { date ->
@@ -327,7 +315,6 @@ fun BottomSheetUI() {
             .padding(top = 16.dp)
     ) {
 
-        // 🔵 Tab Bar
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = Color(0xFFF8F9FA),
@@ -349,8 +336,10 @@ fun BottomSheetUI() {
                         Text(
                             text = title,
                             fontSize = 16.sp,
-                            fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (selectedTab == index) Color.Black else Color.Gray
+                            fontWeight = if (selectedTab == index)
+                                FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (selectedTab == index)
+                                Color.Black else Color.Gray
                         )
                     }
                 )
@@ -359,21 +348,34 @@ fun BottomSheetUI() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        TransactionItem(
-            title = "Food",
-            date = "20 Feb 2024",
-            amount = "+ $20",
-            vat = "Vat 0.5%",
-            method = "Google Pay"
-        )
+        when (selectedTab) {
 
-        TransactionItem(
-            title = "Uber",
-            date = "13 Mar 2024",
-            amount = "- $18",
-            vat = "Vat 0.8%",
-            method = "Cash"
-        )
+            0 -> {
+                TransactionItem(
+                    title = "Food",
+                    date = "20 Feb 2024",
+                    amount = "+ $20",
+                    vat = "Vat 0.5%",
+                    method = "Google Pay"
+                )
+
+                TransactionItem(
+                    title = "Uber",
+                    date = "13 Mar 2024",
+                    amount = "- $18",
+                    vat = "Vat 0.8%",
+                    method = "Cash"
+                )
+            }
+
+            1 -> {
+
+                CategoryItem("Food")
+                CategoryItem("Transport")
+                CategoryItem("Shopping")
+
+            }
+        }
     }
 }
 
@@ -393,7 +395,6 @@ fun TransactionItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        // Icon Background
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -410,7 +411,6 @@ fun TransactionItem(
 
         Spacer(modifier = Modifier.width(14.dp))
 
-        // Left Side (Title + Date)
         Column(
             modifier = Modifier.weight(1f)
         ) {
@@ -427,7 +427,6 @@ fun TransactionItem(
             )
         }
 
-        // Right Side (Amount + Method)
         Column(
             horizontalAlignment = Alignment.End
         ) {
@@ -443,5 +442,21 @@ fun TransactionItem(
                 color = Color.Gray
             )
         }
+    }
+}
+
+@Composable
+fun CategoryItem(title: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Text(
+            text = title,
+            modifier = Modifier.padding(16.dp),
+            fontSize = 16.sp
+        )
     }
 }
