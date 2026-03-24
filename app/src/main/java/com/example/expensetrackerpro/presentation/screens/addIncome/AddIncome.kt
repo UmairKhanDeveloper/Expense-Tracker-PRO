@@ -106,7 +106,7 @@ fun AddIncome(navController: NavController) {
 
             Text(
                 text = "Income Title",
-                color = Color.Gray,
+                color = Color(0xFF9BA1A8),
                 fontSize = 14.sp
             )
 
@@ -117,7 +117,7 @@ fun AddIncome(navController: NavController) {
 
             Text(
                 text = "Amount",
-                color = Color.Gray,
+                color = Color(0xFF9BA1A8),
                 fontSize = 14.sp
             )
 
@@ -128,7 +128,7 @@ fun AddIncome(navController: NavController) {
 
             Text(
                 text = "Income Category",
-                color = Color.Gray,
+                color = Color(0xFF9BA1A8),
                 fontSize = 14.sp
             )
 
@@ -163,7 +163,6 @@ fun CustomTextField(
             color = Color.Black
         ),
         modifier = Modifier
-            .padding(bottom = 24.dp)
             .fillMaxWidth()
             .height(48.dp)
             .onFocusChanged {
@@ -234,7 +233,6 @@ fun AmountTextField(
             keyboardType = KeyboardType.Number
         ),
         modifier = Modifier
-            .padding(bottom = 24.dp)
             .fillMaxWidth()
             .height(48.dp)
             .onFocusChanged {
@@ -299,8 +297,6 @@ fun CategorySection(
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            // PLUS BUTTON
             Box(
                 modifier = Modifier
                     .size(56.dp)
@@ -344,7 +340,7 @@ fun CategoryChip(
     Box(
         modifier = Modifier
             .height(56.dp)
-            .clip(RoundedCornerShape(30.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(
                 brush = if (isSelected) {
                     Brush.horizontalGradient(

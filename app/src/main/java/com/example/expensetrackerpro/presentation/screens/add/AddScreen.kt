@@ -96,7 +96,7 @@ fun AddScreen(navController: NavController) {
                 TransactionList()
             }
 
-            IncomeExpenseButtons(navController)
+            IncomeExpenseButtons(navController, onAddClick = {})
 
         }
 
@@ -105,7 +105,10 @@ fun AddScreen(navController: NavController) {
 
 
 @Composable
-fun IncomeExpenseButtons(navController: NavController) {
+fun IncomeExpenseButtons(
+    navController: NavController,
+    onAddClick: () -> Unit = {}
+) {
 
     Row(
         modifier = Modifier
@@ -117,22 +120,23 @@ fun IncomeExpenseButtons(navController: NavController) {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-        Box(
-            modifier = Modifier
-                .height(88.dp)
-                .width(48.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color.Transparent)
-                .dashedBorder()
-                .clickable { },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "+",
-                fontSize = 24.sp,
-                color = Color.Gray
-            )
-        }
+
+            Box(
+                modifier = Modifier
+                    .height(88.dp)
+                    .width(48.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .dashedBorder()
+                    .clickable { onAddClick() },   // 👈 still clickable internally
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "+",
+                    fontSize = 24.sp,
+                    color = Color.Gray
+                )
+            }
+
 
         Box(
             modifier = Modifier

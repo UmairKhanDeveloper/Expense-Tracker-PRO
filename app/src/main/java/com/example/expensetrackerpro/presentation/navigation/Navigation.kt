@@ -58,10 +58,10 @@ import com.example.expensetrackerpro.presentation.screens.home.HomeScreen
 import com.example.expensetrackerpro.presentation.screens.notification.NotificationScreen
 import com.example.expensetrackerpro.presentation.screens.onboarding.OnBoardingScreen
 import com.example.expensetrackerpro.presentation.screens.passwordupdate.PasswordUpdateScreen
+import com.example.expensetrackerpro.presentation.screens.savings.SavingsScreen
 import com.example.expensetrackerpro.presentation.screens.setting.SettingScreen
 import com.example.expensetrackerpro.presentation.screens.signup.SignUpScreen
 import com.example.expensetrackerpro.presentation.screens.splash.SplashScreen
-import com.example.expensetrackerpro.presentation.screens.task.TaskScreen
 
 @Composable
 fun Navigation(navController: NavHostController) {
@@ -84,7 +84,7 @@ fun Navigation(navController: NavHostController) {
         }
         composable(Screens.PasswordUpdateScreen.route) { PasswordUpdateScreen(navController) }
         composable(Screens.RegisterScreen.route) { RegisterScreen(navController) }
-        composable(Screens.TaskScreen.route) { TaskScreen(navController) }
+        composable(Screens.SavingsScreen.route) { SavingsScreen(navController) }
         composable(Screens.AddScreen.route) { AddScreen(navController) }
         composable(Screens.NotificationScreen.route) { NotificationScreen(navController) }
         composable(Screens.SettingScreen.route) { SettingScreen(navController) }
@@ -122,9 +122,9 @@ sealed class Screens(
         Icons.Outlined.Home
     )
 
-    object TaskScreen : Screens(
-        "TaskScreen",
-        "Tasks",
+    object SavingsScreen : Screens(
+        "SavingsScreen",
+        "SavingsScreen",
         Icons.Filled.CheckCircle,
         Icons.Outlined.CheckCircle
     )
@@ -197,6 +197,7 @@ sealed class Screens(
         Icons.Filled.Settings,
         Icons.Outlined.Settings
     )
+
 }
 
 @Composable
@@ -204,7 +205,7 @@ fun BottomNavigation(navController: NavController) {
 
     val items = listOf(
         Screens.HomeScreen,
-        Screens.TaskScreen,
+        Screens.SavingsScreen,
         Screens.NotificationScreen,
         Screens.SettingScreen,
     )

@@ -125,5 +125,6 @@ dependencies {
     implementation("com.mikhaellopez:circularprogressbar:3.1.0")
     implementation("androidx.biometric:biometric:1.1.0")
 
+    implementation("io.github.ehsannarmani:compose-charts:0.2.5")
 }
 

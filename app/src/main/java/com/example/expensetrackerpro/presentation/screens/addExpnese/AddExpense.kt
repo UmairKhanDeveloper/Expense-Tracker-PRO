@@ -61,8 +61,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AddExpense(navController: NavController) {
 
-    var incomeTitle by remember { mutableStateOf("Side Business") }
-    var amount by remember { mutableStateOf("1,368") }
+    var incomeTitle by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Rewards") }
 
     Scaffold(

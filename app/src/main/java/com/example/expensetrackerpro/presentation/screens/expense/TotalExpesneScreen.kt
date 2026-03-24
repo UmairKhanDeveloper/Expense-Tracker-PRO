@@ -2,6 +2,9 @@ package com.example.expensetrackerpro.presentation.screens.expense
 
 import android.annotation.SuppressLint
 import android.os.Build
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,8 +18,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
@@ -49,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.expensetrackerpro.R
+import ir.ehsannarmani.compose_charts.PieChart
+import ir.ehsannarmani.compose_charts.models.Pie
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -304,12 +311,13 @@ fun TotalBudgetUI() {
 fun BottomSheetUI() {
 
     var selectedTab by remember { mutableStateOf(0) }
-
     val tabs = listOf("Spends", "Categories")
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .height(250.dp)
+            .verticalScroll(rememberScrollState())
             .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp))
             .background(Color(0xFFF8F9FA))
             .padding(top = 16.dp)
@@ -369,16 +377,11 @@ fun BottomSheetUI() {
             }
 
             1 -> {
-
-                CategoryItem("Food")
-                CategoryItem("Transport")
-                CategoryItem("Shopping")
-
+                PieChartUi()
             }
         }
     }
 }
-
 @Composable
 fun TransactionItem(
     title: String,
@@ -445,18 +448,55 @@ fun TransactionItem(
     }
 }
 
+
 @Composable
-fun CategoryItem(title: String) {
-    Card(
+fun PieChartUi() {
+
+    var data by remember {
+        mutableStateOf(
+            listOf(
+                Pie("Food", 25.0, Color(0xFF2FDAFF), Color(0xFF81E6FF)),
+                Pie("Transport", 15.0, Color(0xFF6C63FF), Color(0xFFB3A6FF)),
+                Pie("Shopping", 20.0, Color(0xFFFFB74D), Color(0xFFFFD54F)),
+                Pie("Bills", 10.0, Color(0xFFFF5C5C), Color(0xFFFF8A8A)),
+                Pie("Health", 15.0, Color(0xFF4CAF50), Color(0xFF81C784)),
+                Pie("Savings", 15.0, Color(0xFF009688), Color(0xFF4DB6AC))
+            )
+        )
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(12.dp)
+            .height(250.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = title,
-            modifier = Modifier.padding(16.dp),
-            fontSize = 16.sp
+
+        PieChart(
+            modifier = Modifier.size(200.dp),
+            data = data,
+
+            onPieClick = { clickedPie: Pie ->
+                val pieIndex = data.indexOf(clickedPie)
+
+                data = data.mapIndexed { index: Int, pie: Pie ->
+                    pie.copy(selected = index == pieIndex)
+                }
+            },
+
+            selectedScale = 1.2f,
+
+            scaleAnimEnterSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            ),
+
+            scaleAnimExitSpec = tween(300),
+            colorAnimEnterSpec = tween(300),
+            colorAnimExitSpec = tween(300),
+            spaceDegreeAnimExitSpec = tween(300),
+
+            style = Pie.Style.Stroke(width = 20.dp)
         )
     }
 }
