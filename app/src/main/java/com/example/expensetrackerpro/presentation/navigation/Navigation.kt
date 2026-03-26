@@ -54,11 +54,13 @@ import com.example.expensetrackerpro.presentation.screens.addIncome.AddExpense
 import com.example.expensetrackerpro.presentation.screens.addIncome.AddIncome
 import com.example.expensetrackerpro.presentation.screens.expense.TotalExpenseScreen
 import com.example.expensetrackerpro.presentation.screens.forgetpassword.ForgetPasswordScreen
+import com.example.expensetrackerpro.presentation.screens.goal.AddGoal
 import com.example.expensetrackerpro.presentation.screens.home.HomeScreen
 import com.example.expensetrackerpro.presentation.screens.notification.NotificationScreen
 import com.example.expensetrackerpro.presentation.screens.onboarding.OnBoardingScreen
 import com.example.expensetrackerpro.presentation.screens.passwordupdate.PasswordUpdateScreen
 import com.example.expensetrackerpro.presentation.screens.savings.SavingsScreen
+import com.example.expensetrackerpro.presentation.screens.setReminder.SetReminders
 import com.example.expensetrackerpro.presentation.screens.setting.SettingScreen
 import com.example.expensetrackerpro.presentation.screens.signup.SignUpScreen
 import com.example.expensetrackerpro.presentation.screens.splash.SplashScreen
@@ -91,6 +93,8 @@ fun Navigation(navController: NavHostController) {
         composable(Screens.TotalExpenseScreen.route) { TotalExpenseScreen(navController) }
         composable(Screens.AddIncome.route) { AddIncome(navController) }
         composable(Screens.AddExpense.route) { AddExpense(navController) }
+        composable(Screens.AddGoal.route) { AddGoal(navController) }
+        composable(Screens.SetReminders.route) { SetReminders(navController) }
     }
 }
 
@@ -191,9 +195,23 @@ sealed class Screens(
         Icons.Filled.Settings,
         Icons.Outlined.Settings
     )
+
     object AddExpense : Screens(
         "AddExpense",
         "AddExpense",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+
+    object AddGoal : Screens(
+        "AddGoal",
+        "AddGoal",
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
+    )
+    object SetReminders : Screens(
+        "SetReminders",
+        "SetReminders",
         Icons.Filled.Settings,
         Icons.Outlined.Settings
     )
@@ -339,6 +357,8 @@ fun NavEntry() {
         Screens.AddScreen.route -> false
         Screens.AddIncome.route -> false
         Screens.AddExpense.route -> false
+        Screens.AddGoal.route -> false
+        Screens.SetReminders.route -> false
         else -> true
     }
 

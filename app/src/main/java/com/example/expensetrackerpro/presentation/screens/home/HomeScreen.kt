@@ -47,6 +47,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -101,7 +102,7 @@ fun HomeScreen(navController: NavController) {
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .clip(CircleShape),
-                                contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                contentScale = ContentScale.Crop
                             )
                         }
                     }
@@ -142,7 +143,8 @@ fun HomeScreen(navController: NavController) {
             ) {
                 SavingsRemindBudgetBar(
                     selectedIndex = selectedIndex,
-                    onTabSelected = { selectedIndex = it }
+                    onTabSelected = { selectedIndex = it },
+                    navController = navController
                 )
 
 
@@ -270,13 +272,14 @@ fun StatCard(
 @Composable
 fun SavingsRemindBudgetBar(
     selectedIndex: Int,
-    onTabSelected: (Int) -> Unit
+    onTabSelected: (Int) -> Unit,
+    navController: NavController
 ) {
 
     val items = listOf(
-        TabItem("Savings", Icons.Default.Add),
-        TabItem("Remind", Icons.Default.Notifications),
-        TabItem("Budget", Icons.Default.AccountBalanceWallet)
+        TabItem("Savings", Icons.Default.Add, onClick = {navController.navigate(Screens.AddGoal.route)}),
+        TabItem("Remind", Icons.Default.Notifications,onClick = {navController.navigate(Screens.SetReminders.route)}),
+        TabItem("Budget", Icons.Default.AccountBalanceWallet,onClick = {})
     )
 
     Row(
@@ -314,7 +317,10 @@ fun SavingsRemindBudgetBar(
                     )
                     .clip(RoundedCornerShape(20.dp))
                     .background(backgroundBrush)
-                    .clickable { onTabSelected(index) }
+                    .clickable {
+                        onTabSelected(index)
+                        item.onClick()
+                    }
                     .padding(horizontal = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -358,7 +364,8 @@ fun SavingsRemindBudgetBar(
 
 data class TabItem(
     val title: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val onClick: () -> Unit
 )
 
 @Composable
