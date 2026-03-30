@@ -145,10 +145,7 @@ fun NotificationItem() {
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "More"
-            )
+           Icon(painter = painterResource(id = R.drawable.more_horizontal), contentDescription = "")
         }
     }
 

@@ -127,7 +127,7 @@ fun IncomeExpenseButtons(
                     .width(48.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .dashedBorder()
-                    .clickable { onAddClick() },   // 👈 still clickable internally
+                    .clickable { onAddClick() },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
