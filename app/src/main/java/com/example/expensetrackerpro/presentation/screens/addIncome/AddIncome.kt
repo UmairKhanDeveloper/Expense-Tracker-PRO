@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,12 +15,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.pullrefresh.pullRefreshIndicatorTransform
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -31,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -95,8 +100,7 @@ fun AddIncome(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(padding),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
@@ -107,7 +111,7 @@ fun AddIncome(navController: NavController) {
             Text(
                 text = "Income Title",
                 color = Color(0xFF9BA1A8),
-                fontSize = 14.sp
+                fontSize = 14.sp, modifier = Modifier.padding(start = 20.dp)
             )
 
             CustomTextField(
@@ -118,7 +122,7 @@ fun AddIncome(navController: NavController) {
             Text(
                 text = "Amount",
                 color = Color(0xFF9BA1A8),
-                fontSize = 14.sp
+                fontSize = 14.sp, modifier = Modifier.padding(start = 20.dp)
             )
 
             AmountTextField(
@@ -129,7 +133,7 @@ fun AddIncome(navController: NavController) {
             Text(
                 text = "Income Category",
                 color = Color(0xFF9BA1A8),
-                fontSize = 14.sp
+                fontSize = 14.sp, modifier = Modifier.padding(start = 20.dp)
             )
 
             CategorySection(selectedCategory) {
@@ -163,7 +167,7 @@ fun CustomTextField(
             color = Color.Black
         ),
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth().padding(horizontal = 20.dp)
             .height(48.dp)
             .onFocusChanged {
                 isFocused = it.isFocused
@@ -232,7 +236,7 @@ fun AmountTextField(
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Number
         ),
-        modifier = Modifier
+        modifier = Modifier.padding(horizontal = 20.dp)
             .fillMaxWidth()
             .height(48.dp)
             .onFocusChanged {
@@ -292,18 +296,32 @@ fun CategorySection(
     onSelected: (String) -> Unit
 ) {
 
+    // ✅ Dynamic list
+    val categories = remember {
+        mutableStateListOf("Salary", "Rewards")
+    }
+
+    var showDialog by remember { mutableStateOf(false) }
+
     Column {
 
+        // ✅ Horizontal scroll with proper padding to avoid cut
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp), // ✅ ensures left/right padding
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
+            // ➕ Add Button
             Box(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color(0xFFF1F3F6))
                     .dashedBorder()
-                    .clickable { },
+                    .clickable { showDialog = true },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -314,19 +332,127 @@ fun CategorySection(
                 )
             }
 
-            CategoryChip(
-                title = "Salary",
-                isSelected = selected == "Salary",
-                onClick = { onSelected("Salary") }
-            )
-
-            CategoryChip(
-                title = "Rewards",
-                isSelected = selected == "Rewards",
-                onClick = { onSelected("Rewards") }
-            )
+            // ✅ Dynamic Chips
+            categories.forEach { category ->
+                CategoryChip(
+                    title = category,
+                    isSelected = selected == category,
+                    onClick = { onSelected(category) }
+                )
+            }
         }
     }
+
+    // ✅ Dialog
+    if (showDialog) {
+        AddCategoryDialog(
+            onAdd = {
+                if (!categories.contains(it)) { // duplicate avoid
+                    categories.add(it)
+                }
+                showDialog = false
+            },
+            onDismiss = { showDialog = false }
+        )
+    }
+}
+
+@Composable
+fun AddCategoryDialog(
+    onAdd: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var text by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(20.dp), // ✅ smooth rounded corners
+        containerColor = Color.White,       // ✅ professional background
+        tonalElevation = 8.dp,              // ✅ subtle shadow/elevation
+
+        title = {
+            Text(
+                text = "Add Category",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp,
+                color = Color(0xFF242D35)
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    "Enter category name below:",
+                    fontSize = 14.sp,
+                    color = Color(0xFF9BA1A8)
+                )
+
+                BasicTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    singleLine = true,
+                    textStyle = TextStyle(
+                        color = Color.Black,
+                        fontSize = 14.sp
+                    ),
+                    cursorBrush = SolidColor(Color(0xFF2563EB)),
+                    decorationBox = { innerTextField ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .border(
+                                    1.dp,
+                                    if (text.isBlank()) Color(0xFFCBD5E1) else Color(0xFF2563EB),
+                                    RoundedCornerShape(12.dp)
+                                )
+                                .background(Color(0xFFF8F9FA), RoundedCornerShape(12.dp))
+                                .padding(horizontal = 16.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            if (text.isEmpty()) {
+                                Text(
+                                    text = "Category Name",
+                                    color = Color(0xFF9BA1A8),
+                                    fontSize = 14.sp
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = {
+                    if (text.isNotBlank()) {
+                        onAdd(text)
+                    }
+                }
+            ) {
+                Text(
+                    text = "Add",
+                    color = Color(0xFF2563EB),
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDismiss
+            ) {
+                Text(
+                    text = "Cancel",
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
+            }
+        }
+    )
 }
 
 @Composable
@@ -366,11 +492,14 @@ fun CategoryChip(
         )
     }
 }
+
 @Composable
-fun GradientButton() {
+fun GradientButton(
+) {
 
     Box(
         modifier = Modifier
+            .padding(horizontal = 20.dp)
             .fillMaxWidth()
             .height(55.dp)
             .clip(RoundedCornerShape(20.dp))
@@ -421,7 +550,7 @@ fun WeekCalendarAddIncome(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier
+        modifier = Modifier.padding(horizontal = 20.dp)
             .fillMaxWidth()
     ) {
 

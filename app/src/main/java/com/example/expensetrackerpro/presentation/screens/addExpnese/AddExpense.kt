@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFrom
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -65,10 +66,7 @@ fun AddExpense(navController: NavController) {
     }
     }
 
-//    val context = LocalContext.current
-//    val db = remember { AppDatabase.getDatabase(context) }
-//    val repository = remember { Repository(db) }
-//    val viewModel = remember { MainViewModel(repository) }
+
 
     Scaffold(
         containerColor = Color(0xFFF0F1F3),
@@ -101,35 +99,33 @@ fun AddExpense(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 20.dp),
+                .padding(padding),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // ✅ FIXED: date sync
             WeekCalendarAddExpense(
                 onDateSelected = {
                     selectedDate = it
                 }
             )
 
-            Text("Expense Title", color = Color.Gray, fontSize = 14.sp)
+            Text("Expense Title", color = Color.Gray, fontSize = 14.sp,  modifier = Modifier.padding(start = 20.dp))
 
             CustomTextField(
                 value = title,
                 onValueChange = { title = it }
             )
 
-            Text("Amount", color = Color.Gray, fontSize = 14.sp)
+            Text("Amount", color = Color.Gray, fontSize = 14.sp,  modifier = Modifier.padding(start = 20.dp))
 
             AmountTextField(
                 value = amount,
                 onValueChange = { amount = it }
             )
 
-            Text("Category", color = Color.Gray, fontSize = 14.sp)
+            Text("Category", color = Color.Gray, fontSize = 14.sp, modifier = Modifier.padding(start = 20.dp))
 
             CategorySection(selectedCategory) {
                 selectedCategory = it
@@ -139,24 +135,7 @@ fun AddExpense(navController: NavController) {
 
             GradientButtonExpense(
                 onClick = {
-//                    if (title.isNotEmpty() && amount.isNotEmpty()) {
-//
-//                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                            viewModel.insertExpense(
-//                                ExpenseEntity(
-//                                    title = title,
-//                                    amount = amount.toDouble(),
-//                                    category = selectedCategory,
-//                                    date = selectedDate
-//                                        .atStartOfDay(ZoneId.systemDefault())
-//                                        .toInstant()
-//                                        .toEpochMilli()
-//                                )
-//                            )
-//                        }
-//
-//                        navController.popBackStack()
-//                    }
+
                 }
             )
 
@@ -169,7 +148,7 @@ fun AddExpense(navController: NavController) {
 fun GradientButtonExpense(onClick: () -> Unit) {
 
     Box(
-        modifier = Modifier
+        modifier = Modifier.padding(horizontal = 20.dp)
             .clickable { onClick() }
             .fillMaxWidth()
             .height(55.dp)
@@ -222,7 +201,7 @@ fun WeekCalendarAddExpense(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier
+        modifier = Modifier.padding(horizontal = 20.dp)
             .fillMaxWidth()
     ) {
 
